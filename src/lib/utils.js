@@ -63,3 +63,4 @@ export function getInitials(name) {
     .substring(0, 2)
     .toUpperCase();
 }
+

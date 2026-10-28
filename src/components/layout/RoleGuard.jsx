@@ -47,3 +47,4 @@ export function RoleGuard({ children, allowedRoles = [] }) {
 
   return children;
 }
+

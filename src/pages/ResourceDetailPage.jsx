@@ -346,3 +346,4 @@ export function ResourceDetailPage() {
     </div>
   );
 }
+

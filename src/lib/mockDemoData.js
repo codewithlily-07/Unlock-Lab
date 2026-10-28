@@ -661,3 +661,4 @@ export const INITIAL_INCIDENTS = [
     created_at: new Date(Date.now() - 90000000).toISOString(),
   },
 ];
+

@@ -17,12 +17,21 @@ import { ExplorePage } from './pages/ExplorePage';
 import { ResourceDetailPage } from './pages/ResourceDetailPage';
 import { MyBookingsPage } from './pages/MyBookingsPage';
 import { BookingDetailPage } from './pages/BookingDetailPage';
+import { CheckInPage } from './pages/CheckInPage';
+import { ReturnPage } from './pages/ReturnPage';
 
-// Owner & Admin Pages
+// Owner Pages
 import { OwnerDashboardPage } from './pages/owner/OwnerDashboardPage';
 import { ReviewQueuePage } from './pages/owner/ReviewQueuePage';
 import { ResourceEditorPage } from './pages/owner/ResourceEditorPage';
+import { ActiveLoansPage } from './pages/owner/ActiveLoansPage';
+import { IncidentsPage } from './pages/owner/IncidentsPage';
+
+// Admin Pages
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { VerificationQueuePage } from './pages/admin/VerificationQueuePage';
+import { GlobalAuditLogPage } from './pages/admin/GlobalAuditLogPage';
+import { FairUseSettingsPage } from './pages/admin/FairUseSettingsPage';
 
 export default function App() {
   return (
@@ -44,6 +53,8 @@ export default function App() {
               <Route path="credentials" element={<CredentialsPage />} />
               <Route path="my-bookings" element={<MyBookingsPage />} />
               <Route path="bookings/:id" element={<BookingDetailPage />} />
+              <Route path="bookings/:id/checkin" element={<CheckInPage />} />
+              <Route path="bookings/:id/return" element={<ReturnPage />} />
 
               {/* Owner / Manager Routes */}
               <Route
@@ -59,6 +70,22 @@ export default function App() {
                 element={
                   <RoleGuard allowedRoles={['owner', 'manager', 'admin']}>
                     <ReviewQueuePage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="owner/loans"
+                element={
+                  <RoleGuard allowedRoles={['owner', 'manager', 'admin']}>
+                    <ActiveLoansPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="owner/incidents"
+                element={
+                  <RoleGuard allowedRoles={['owner', 'manager', 'admin']}>
+                    <IncidentsPage />
                   </RoleGuard>
                 }
               />
@@ -84,7 +111,7 @@ export default function App() {
                 path="admin/dashboard"
                 element={
                   <RoleGuard allowedRoles={['admin']}>
-                    <VerificationQueuePage />
+                    <AdminDashboardPage />
                   </RoleGuard>
                 }
               />
@@ -93,6 +120,22 @@ export default function App() {
                 element={
                   <RoleGuard allowedRoles={['admin']}>
                     <VerificationQueuePage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="admin/audit-log"
+                element={
+                  <RoleGuard allowedRoles={['admin']}>
+                    <GlobalAuditLogPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="admin/fair-use"
+                element={
+                  <RoleGuard allowedRoles={['admin']}>
+                    <FairUseSettingsPage />
                   </RoleGuard>
                 }
               />

@@ -7,10 +7,11 @@ import {
   INITIAL_NOTIFICATIONS,
   INITIAL_AUDIT_LOGS,
   INITIAL_INCIDENTS,
-} from './mockDemoData';
+} from './mockDemoData.js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : (typeof process !== 'undefined' ? process.env : {});
+const supabaseUrl = env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
@@ -36,7 +37,15 @@ const STORAGE_KEYS = {
   INCIDENTS: 'unlocklab_incidents',
 };
 
+const memoryStore = {};
+
 function getStorage(key, defaultData) {
+  if (typeof localStorage === 'undefined') {
+    if (!memoryStore[key]) {
+      memoryStore[key] = JSON.parse(JSON.stringify(defaultData));
+    }
+    return memoryStore[key];
+  }
   try {
     const saved = localStorage.getItem(key);
     if (!saved) {
@@ -50,6 +59,10 @@ function getStorage(key, defaultData) {
 }
 
 function setStorage(key, data) {
+  if (typeof localStorage === 'undefined') {
+    memoryStore[key] = data;
+    return;
+  }
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (e) {
@@ -544,3 +557,4 @@ export const api = {
     return true;
   },
 };
+

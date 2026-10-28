@@ -35,3 +35,4 @@ export function TableHead({ children, className = '' }) {
 export function TableCell({ children, className = '' }) {
   return <td className={cn('px-4 py-3 text-slate-700', className)}>{children}</td>;
 }
+

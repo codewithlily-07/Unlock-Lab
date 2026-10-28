@@ -22,3 +22,4 @@ export function Badge({ children, variant = 'default', size = 'md', className = 
 
   return <span className={cn(base, variants[variant], sizes[size], className)}>{children}</span>;
 }
+

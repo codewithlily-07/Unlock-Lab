@@ -31,3 +31,4 @@ export function CardFooter({ children, className = '' }) {
     </div>
   );
 }
+
