@@ -22,6 +22,7 @@ import {
   QrCode,
 } from 'lucide-react';
 import { formatDuration, formatCurrency } from '../lib/utils';
+import { QRScannerModal } from '../components/shared/QRScannerModal';
 
 export function ResourceDetailPage() {
   const { id } = useParams();
@@ -32,6 +33,7 @@ export function ResourceDetailPage() {
   const [resource, setResource] = useState(null);
   const [eligibility, setEligibility] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   // Booking Form State
   const defaultDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -157,9 +159,18 @@ export function ResourceDetailPage() {
                   {formatDuration(resource.max_booking_minutes)} (up to {resource.advance_booking_days} days in advance)
                 </span>
               </div>
-              <div className="flex items-center space-x-2">
-                <QrCode className="w-4 h-4 text-brand-600 shrink-0" />
-                <span className="text-[11px] text-slate-500 font-mono">Token: {resource.qr_token}</span>
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center space-x-2">
+                  <QrCode className="w-4 h-4 text-brand-600 shrink-0" />
+                  <span className="text-[11px] text-slate-500 font-mono">Token: {resource.qr_token}</span>
+                </div>
+                <button
+                  onClick={() => setShowQrModal(true)}
+                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 hover:underline"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>Print QR Bench Tag</span>
+                </button>
               </div>
             </div>
           </div>
@@ -343,6 +354,12 @@ export function ResourceDetailPage() {
           </Card>
         </div>
       </div>
+
+      <QRScannerModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        resource={resource}
+      />
     </div>
   );
 }

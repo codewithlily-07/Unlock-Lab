@@ -1,0 +1,16 @@
+{
+  "name": "UnlockLab - ECE Equipment Sharing",
+  "short_name": "UnlockLab",
+  "description": "Trusted institutional platform for sharing idle lab equipment and spaces.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
