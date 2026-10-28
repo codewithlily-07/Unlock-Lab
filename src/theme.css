@@ -1,0 +1,56 @@
+/**
+ * UnlockLab Design System & Theme Tokens
+ * All design tokens (colors, radius, shadows, typography) reside here
+ * for centralized customization and single-point restyling.
+ */
+:root {
+  /* Brand Primary Colors (ECE Deep Tech Blue) */
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-300: #93c5fd;
+  --brand-400: #60a5fa;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-800: #1e40af;
+  --brand-900: #1e3a8a;
+  --brand-primary: #2563eb;
+  --brand-primary-hover: #1d4ed8;
+  --brand-primary-light: #eff6ff;
+  --brand-foreground: #ffffff;
+
+  /* Surfaces & Backgrounds */
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-border: #e2e8f0;
+
+  /* Typography Colors */
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+
+  /* Semantic Statuses */
+  --status-success: #10b981;
+  --status-success-light: #ecfdf5;
+  --status-warning: #f59e0b;
+  --status-warning-light: #fffbeb;
+  --status-danger: #ef4444;
+  --status-danger-light: #fef2f2;
+  --status-info: #0ea5e9;
+  --status-info-light: #f0f9ff;
+  --status-neutral: #64748b;
+  --status-neutral-light: #f1f5f9;
+
+  /* Geometry & Radius */
+  --radius: 0.5rem;
+  --radius-sm: 0.25rem;
+  --radius-lg: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
