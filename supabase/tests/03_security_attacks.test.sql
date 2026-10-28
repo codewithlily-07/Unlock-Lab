@@ -86,3 +86,4 @@ BEGIN
   PERFORM set_config('role', 'postgres', true);
   RAISE NOTICE '--- TEST 03 SECURITY ATTACK RESISTANCE PASSED (ALL 6 ATTACKS NEUTRALIZED) ---';
 END $$;
+

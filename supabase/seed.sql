@@ -528,3 +528,4 @@ INSERT INTO notifications (user_id, type, title, message, link, is_read, created
 ('d0000000-0000-0000-0000-000000000005', 'booking_status', 'Booking Approved: Tektronix Oscilloscope', 'Your reservation request was approved by Dr. Rajesh Sharma.', '/bookings/10000000-0000-0000-0000-000000000001', true, now() - INTERVAL '3 days'),
 ('d0000000-0000-0000-0000-000000000006', 'booking_status', 'Waitlisted at Position #1', 'You are #1 on the waitlist for Tektronix 4-Channel 1GHz Digital Oscilloscope.', '/bookings/10000000-0000-0000-0000-000000000005', false, now() - INTERVAL '4 hours'),
 ('d0000000-0000-0000-0000-000000000007', 'overdue', 'Equipment Return Overdue', 'Your booked equipment (Fluke Thermal Camera) is past due. Please return it to the lab immediately.', '/bookings/10000000-0000-0000-0000-000000000003', false, now() - INTERVAL '20 minutes');
+

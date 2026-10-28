@@ -54,3 +54,4 @@ BEGIN
   RAISE NOTICE 'SUCCESS: Overlapping approval was intercepted with message: "%s"', v_error_message;
   RAISE NOTICE '--- TEST 04 CONCURRENCY & EXCLUSION CONSTRAINT PASSED ---';
 END $$;
+

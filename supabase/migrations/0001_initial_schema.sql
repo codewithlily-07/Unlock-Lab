@@ -401,3 +401,4 @@ SELECT
     + (clean_returns * 2)
   ))::INTEGER AS reliability_score
 FROM user_history;
+

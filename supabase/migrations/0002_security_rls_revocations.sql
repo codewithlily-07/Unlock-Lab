@@ -309,3 +309,4 @@ CREATE TRIGGER trg_audit_log_no_update_delete
   BEFORE UPDATE OR DELETE ON audit_log
   FOR EACH ROW
   EXECUTE FUNCTION enforce_audit_log_immutable();
+
