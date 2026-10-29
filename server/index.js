@@ -328,7 +328,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`[API Server] UnlockLab Backend running securely on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`[API Server] UnlockLab Backend running securely on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
 

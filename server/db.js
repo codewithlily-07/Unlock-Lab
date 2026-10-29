@@ -6,7 +6,10 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DB_PATH = path.resolve(__dirname, 'unlocklab.db');
+const isVercel = Boolean(process.env.VERCEL);
+const DB_PATH = isVercel
+  ? path.resolve('/tmp', 'unlocklab.db')
+  : path.resolve(__dirname, 'unlocklab.db');
 
 let dbInstance = null;
 
