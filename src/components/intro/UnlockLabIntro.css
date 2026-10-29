@@ -1,0 +1,235 @@
+/* Cinematic UnlockLab Intro Styles */
+.intro-container {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(circle at 50% 45%, #FCFBF7 0%, #FAF9F4 60%, #F0EEE6 100%);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.intro-container.intro-fading {
+  opacity: 0;
+  transform: scale(1.03);
+  pointer-events: none;
+}
+
+/* Layer 0: Light Warm Ivory Background (#FAF9F4) */
+.intro-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 45%, #FCFBF7 0%, #FAF9F4 60%, #F0EEE6 100%);
+  pointer-events: none;
+}
+
+/* Layer 1: React Bits LightTunnel Component (0.0s-1.8s active, 1.8s-2.3s smooth fade-out) */
+.intro-light-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.intro-light-layer.is-fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro-light-layer canvas,
+.intro-light-layer .light-tunnel-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Layer 2: 3D Resource Blocks & Central Assembly (Rises 0.5s-2.0s, Assembles 2.0s-3.5s) */
+.intro-blocks {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.intro-center-stage {
+  position: relative;
+  width: 480px;
+  height: 480px;
+  max-width: 90vw;
+  max-height: 90vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+}
+
+.intro-center-stage.floating {
+  animation: introFloat 4.5s ease-in-out infinite;
+}
+
+@keyframes introFloat {
+  0%, 100% {
+    transform: translateY(0px) rotateY(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotateY(4deg);
+  }
+}
+
+/* Central Leaf / Resource Emblem */
+.central-emblem {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(214, 173, 99, 0.35) 0%, rgba(18, 107, 79, 0.85) 60%, rgba(7, 61, 45, 0.98) 100%);
+  border: 1.5px solid rgba(214, 173, 99, 0.8);
+  box-shadow: 0 10px 30px rgba(7, 61, 45, 0.22), 0 0 25px rgba(214, 173, 99, 0.45);
+  opacity: 0;
+  transform: scale(0.6) rotate(-20deg);
+  transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.central-emblem.assembled {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.emblem-pulse-ring {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(214, 173, 99, 0.6);
+  animation: emblemRotate 18s linear infinite;
+}
+
+@keyframes emblemRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Orbiting Resource Badges */
+.orbit-icon-badge {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 252, 245, 0.96);
+  border: 1px solid rgba(214, 173, 99, 0.5);
+  color: #073D2D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(7, 61, 45, 0.12), 0 0 12px rgba(214, 173, 99, 0.25);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.orbit-icon-badge.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Layer 3: Prism Canvas Layer (Activates 3.5s-5.5s) */
+.intro-prism {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 1.8s ease, transform 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.intro-prism.visible {
+  opacity: 0.82;
+  transform: scale(1);
+}
+
+/* Layer 4: Brand Reveal Text (Reveals 5.5s-7.0s, z-index: 20) */
+.intro-brand-reveal {
+  position: absolute;
+  bottom: 8%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 20;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.intro-brand-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.intro-brand-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #073D2D 0%, #126B4F 55%, #D6AD63 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 20px rgba(7, 61, 45, 0.12);
+  margin-bottom: 0.5rem;
+}
+
+.intro-brand-tagline {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #126B4F;
+  opacity: 0.95;
+}
+
+/* Skip Intro Button (z-index: 30) */
+.intro-skip-btn {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  z-index: 30;
+  background: rgba(255, 252, 245, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(7, 61, 45, 0.2);
+  color: #073D2D;
+  box-shadow: 0 4px 14px rgba(7, 61, 45, 0.08);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.intro-skip-btn:hover {
+  background: #FFFCF5;
+  border-color: #126B4F;
+  color: #126B4F;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(7, 61, 45, 0.14);
+}

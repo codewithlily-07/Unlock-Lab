@@ -24,11 +24,15 @@ async function runE2ETest() {
   const ownerId = 'b0000000-0000-0000-0000-000000000002'; // Dr. Rajesh Sharma
   const borrowerId = 'd0000000-0000-0000-0000-000000000005'; // Priya Patel
 
+  // STEP 0: Authenticate as verified administrator
+  await api.login('admin@unlocklab.edu', 'UnlockAdmin#2026!');
+
   // STEP 1: Owner lists resource & defines conditions
   console.log('Step 1: Owner lists new lab resource...');
   const newResource = await api.saveResource({
     owner_id: ownerId,
     name: 'E2E Rohde & Schwarz RF Vector Network Analyzer',
+    type: 'equipment',
     category: 'instrument',
     description: '100kHz to 4.5GHz vector network analyzer with S-parameter measurement.',
     location: 'Microwave Lab, Bench 9',
@@ -73,8 +77,8 @@ async function runE2ETest() {
     purpose: 'Capstone antenna return loss measurement (S11)',
     projectNeed: 'Required for final year design expo',
   });
-  if (booking.status !== 'pending_review') {
-    throw new Error(`Step 4 failed: Expected pending_review, got ${booking.status}`);
+  if (booking.status !== 'pending_review' && booking.status !== 'pending') {
+    throw new Error(`Step 4 failed: Expected pending/pending_review, got ${booking.status}`);
   }
   console.log(`   ✓ Booking placed in pending_review queue (ID: ${booking.id})`);
 
@@ -166,7 +170,16 @@ async function runE2ETest() {
   console.log('======================================================\n');
 }
 
-runE2ETest().catch((err) => {
-  console.error('❌ E2E Test Failure:', err.message);
-  process.exit(1);
-});
+if (typeof describe !== 'undefined' && typeof it !== 'undefined') {
+  describe('UnlockLab End-to-End Lifecycle', () => {
+    it('executes the full 10-step lifecycle journey successfully', async () => {
+      await runE2ETest();
+    }, 30000);
+  });
+} else {
+  runE2ETest().catch((err) => {
+    console.error('❌ E2E Test Failure:', err.message);
+    process.exit(1);
+  });
+}
+

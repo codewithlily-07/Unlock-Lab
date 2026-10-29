@@ -1,0 +1,222 @@
+/* ==========================================================================
+   UNLOCKLAB UNIQUE FOOTER ANIMATION SYSTEM
+   ========================================================================== */
+
+/* Top Traveling Light Pulse Beam */
+.footer-light-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(18, 107, 79, 0.2) 20%,
+    rgba(243, 166, 107, 0.95) 50%,
+    rgba(216, 190, 114, 0.95) 60%,
+    rgba(18, 107, 79, 0.2) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: footerBeamSweep 4.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes footerBeamSweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Background Particle Canvas */
+.footer-particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.65;
+}
+
+/* 3D Hologram Column Pods */
+.footer-column-pod {
+  position: relative;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 2;
+}
+
+.footer-column-pod:hover {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(243, 166, 107, 0.4);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22), 0 0 20px rgba(243, 166, 107, 0.12);
+  transform: translateY(-3px) scale(1.01);
+}
+
+/* Staggered 3D Rise Entrance */
+.footer-pod-hidden {
+  opacity: 0;
+  transform: translateY(32px) rotateX(10deg);
+}
+
+.footer-pod-visible {
+  opacity: 1;
+  transform: translateY(0) rotateX(0deg);
+}
+
+/* Logo 3D Prism Tilt */
+.footer-logo-emblem {
+  position: relative;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+
+.footer-column-pod:hover .footer-logo-emblem {
+  transform: perspective(600px) rotateY(18deg) rotateX(-8deg) scale(1.08);
+}
+
+.footer-logo-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 0.85rem;
+  border: 1.5px dashed rgba(243, 166, 107, 0.5);
+  animation: footerRingSpin 18s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes footerRingSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Liquid Gold Link Underlines */
+.footer-link-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footer-link-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, #F3A66B 0%, #D8BE72 100%);
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 8px rgba(243, 166, 107, 0.6);
+}
+
+.footer-link-item:hover::after {
+  width: 100%;
+}
+
+.footer-link-item:hover {
+  transform: translateX(4px);
+  color: #F3A66B;
+}
+
+/* Shimmer Button Effect */
+.footer-shimmer-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footer-shimmer-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  transition: transform 0.75s ease;
+}
+
+.footer-shimmer-btn:hover::before {
+  transform: skewX(-25deg) translateX(300%);
+}
+
+.footer-shimmer-btn:active {
+  transform: scale(0.97);
+}
+
+/* Pulsing Beacon Dot */
+.footer-beacon-pulse {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-beacon-pulse::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #126B4F;
+  opacity: 0.75;
+  animation: footerBeaconPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes footerBeaconPing {
+  75%, 100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* Live Telemetry Bar */
+.footer-telemetry-bar {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  backdrop-filter: blur(8px);
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .footer-light-beam,
+  .footer-logo-ring,
+  .footer-beacon-pulse::after {
+    animation: none !important;
+  }
+  .footer-column-pod,
+  .footer-link-item,
+  .footer-shimmer-btn {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+

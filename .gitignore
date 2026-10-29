@@ -22,3 +22,11 @@ Thumbs.db
 coverage/
 *.log
 
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# Temporary verification scripts
+scratch/
+

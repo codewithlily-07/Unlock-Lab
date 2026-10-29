@@ -48,7 +48,7 @@ export function BookingDetailPage() {
         api.getAuditLogs(b.id),
       ]);
       setResource(r);
-      setAuditLogs(logs);
+      setAuditLogs(logs || []);
     }
     setLoading(false);
   }
@@ -85,11 +85,24 @@ export function BookingDetailPage() {
   }
 
   if (loading) {
-    return <div className="p-12 text-center text-xs text-slate-400">Loading reservation history...</div>;
+    return (
+      <div className="p-16 text-center text-xs font-semibold text-[#798C82]">
+        <div className="w-8 h-8 rounded-full border-2 border-[#126B4F] border-t-transparent animate-spin mx-auto mb-3" />
+        <span>Loading reservation history...</span>
+      </div>
+    );
   }
 
   if (!booking) {
-    return <div className="p-12 text-center text-xs text-slate-400">Reservation not found.</div>;
+    return (
+      <div className="p-12 text-center bg-white rounded-2xl border border-[#E8E2D2] shadow-soft-sm space-y-3">
+        <h3 className="text-base font-bold text-[#17231E]">Reservation Not Found</h3>
+        <p className="text-xs text-[#4A5B53]">The requested booking record does not exist.</p>
+        <Link to="/my-bookings">
+          <Button size="sm">Back to My Bookings</Button>
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -98,7 +111,7 @@ export function BookingDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
         <button
           onClick={() => navigate('/my-bookings')}
-          className="flex items-center space-x-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="flex items-center space-x-1.5 text-xs font-bold text-[#126B4F] hover:text-[#073D2D] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to My Bookings</span>
@@ -107,7 +120,7 @@ export function BookingDetailPage() {
         <div className="flex items-center space-x-2">
           {['approved', 'checked_out'].includes(booking.status) && (
             <Button size="sm" variant="secondary" onClick={handleExportCalendar}>
-              <Download className="w-3.5 h-3.5 mr-1" />
+              <Download className="w-3.5 h-3.5 mr-1 text-[#126B4F]" />
               <span>Export Calendar (.ics)</span>
             </Button>
           )}
@@ -126,17 +139,17 @@ export function BookingDetailPage() {
             <div>
               <div className="flex items-center space-x-2 mb-1.5">
                 <StatusBadge status={booking.status} />
-                <span className="text-xs text-slate-400 font-mono">ID: {booking.id}</span>
+                <span className="text-xs text-[#798C82] font-mono">ID: {booking.id}</span>
               </div>
-              <h1 className="text-xl font-extrabold text-slate-900">{resource?.name}</h1>
-              <p className="text-xs text-slate-500 mt-0.5">{resource?.location}</p>
+              <h1 className="text-xl font-extrabold text-[#17231E] font-sans">{resource?.name}</h1>
+              <p className="text-xs text-[#4A5B53] mt-0.5">{resource?.location}</p>
             </div>
 
             {/* Lifecycle Quick Actions */}
             <div className="no-print">
               {booking.status === 'approved' && (
                 <Link to={`/bookings/${booking.id}/checkin`}>
-                  <Button variant="success" size="sm">
+                  <Button variant="success" size="sm" className="font-bold">
                     Check In &amp; Accept Handover
                   </Button>
                 </Link>
@@ -144,7 +157,7 @@ export function BookingDetailPage() {
 
               {(booking.status === 'checked_out' || booking.status === 'overdue') && (
                 <Link to={`/bookings/${booking.id}/return`}>
-                  <Button variant="primary" size="sm">
+                  <Button variant="primary" size="sm" className="font-bold">
                     Return Equipment &amp; Record Condition
                   </Button>
                 </Link>
@@ -152,42 +165,42 @@ export function BookingDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/80 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#F7F1E5] p-4 rounded-2xl border border-[#E8E2D2] text-xs">
             <div>
-              <span className="text-slate-500 block mb-0.5">Scheduled Reservation:</span>
-              <span className="font-bold text-slate-800">
+              <span className="text-[#4A5B53] block mb-0.5">Scheduled Reservation:</span>
+              <span className="font-bold text-[#17231E]">
                 {formatDateTime(booking.start_at)} &rarr; {formatDateTime(booking.end_at)}
               </span>
             </div>
 
             <div>
-              <span className="text-slate-500 block mb-0.5">Declared Purpose:</span>
-              <span className="font-semibold text-slate-800 italic">"{booking.purpose}"</span>
+              <span className="text-[#4A5B53] block mb-0.5">Declared Purpose:</span>
+              <span className="font-semibold text-[#17231E] italic">"{booking.purpose}"</span>
             </div>
           </div>
         </CardBody>
       </Card>
 
-      {/* Section 7: Explainable "Why this decision?" Box */}
+      {/* Section: Explainable "Why this decision?" Box */}
       <WhyDecisionBox booking={booking} />
 
       {/* Inspection & Custody Handover Condition Reports */}
       {(booking.initial_condition || booking.return_condition) && (
         <Card>
           <CardHeader>
-            <h3 className="text-sm font-bold text-slate-900">Custody Handover Condition Reports</h3>
+            <h3 className="text-sm font-bold text-[#17231E]">Custody Handover Condition Reports</h3>
           </CardHeader>
           <CardBody className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             {booking.initial_condition && (
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+              <div className="p-4 rounded-2xl bg-[#FFFCF5] border border-[#E8E2D2]">
+                <span className="text-[11px] font-bold text-[#798C82] uppercase tracking-wider block mb-1">
                   1. Check-In Handover Inspection
                 </span>
-                <div className="font-bold text-slate-900 capitalize text-sm mb-1">
+                <div className="font-bold text-[#17231E] capitalize text-sm mb-1">
                   Condition: {booking.initial_condition}
                 </div>
-                <p className="text-slate-600 italic">"{booking.initial_notes || 'Clean condition verified'}"</p>
-                <span className="text-[10px] text-slate-400 mt-2 block">
+                <p className="text-[#4A5B53] italic">"{booking.initial_notes || 'Clean condition verified'}"</p>
+                <span className="text-[10px] text-[#798C82] mt-2 block">
                   Recorded: {formatDateTime(booking.checked_in_at)}
                 </span>
               </div>
@@ -195,20 +208,20 @@ export function BookingDetailPage() {
 
             {booking.return_condition && (
               <div
-                className={`p-4 rounded-xl border ${
+                className={`p-4 rounded-2xl border ${
                   booking.return_condition === 'damaged'
-                    ? 'bg-rose-50 border-rose-200 text-rose-900'
-                    : 'bg-slate-50 border-slate-200'
+                    ? 'bg-[#fdf2f1] border-[#c2413a]/30 text-[#c2413a]'
+                    : 'bg-[#FFFCF5] border-[#E8E2D2]'
                 }`}
               >
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                <span className="text-[11px] font-bold text-[#798C82] uppercase tracking-wider block mb-1">
                   2. Return Handover Inspection
                 </span>
-                <div className="font-bold capitalize text-sm mb-1">
+                <div className="font-bold capitalize text-sm mb-1 text-[#17231E]">
                   Condition: {booking.return_condition}
                 </div>
-                <p className="italic">"{booking.return_notes || 'Item inspected on return'}"</p>
-                <span className="text-[10px] opacity-75 mt-2 block">
+                <p className="italic text-[#4A5B53]">"{booking.return_notes || 'Item inspected on return'}"</p>
+                <span className="text-[10px] opacity-75 mt-2 block text-[#798C82]">
                   Recorded: {formatDateTime(booking.returned_at)}
                 </span>
               </div>
@@ -217,11 +230,11 @@ export function BookingDetailPage() {
         </Card>
       )}
 
-      {/* Section 10: Complete Audit Log History Timeline */}
+      {/* Section: Complete Audit Log History Timeline */}
       <Card>
         <CardHeader>
-          <h3 className="text-sm font-bold text-slate-900">Immutable Audit Trail</h3>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h3 className="text-sm font-bold text-[#17231E]">Immutable Audit Trail</h3>
+          <p className="text-xs text-[#4A5B53] mt-0.5">
             Cryptographically stamped append-only event log recording all state transitions.
           </p>
         </CardHeader>
@@ -233,3 +246,4 @@ export function BookingDetailPage() {
   );
 }
 
+export default BookingDetailPage;

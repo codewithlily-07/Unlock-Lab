@@ -3,7 +3,7 @@ import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { FormField, Input } from '../../components/ui/FormField';
 import { useNotifications } from '../../context/NotificationContext';
-import { Scale, ShieldAlert, Check, RefreshCw } from 'lucide-react';
+import { Scale, ShieldAlert, Check, RefreshCw, Sliders } from 'lucide-react';
 
 export function FairUseSettingsPage() {
   const { showToast } = useNotifications();
@@ -24,24 +24,27 @@ export function FairUseSettingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Fair-Use Governance &amp; Quotas</h1>
-        <p className="text-xs text-slate-500 mt-1">
+      <div className="pb-2 border-b border-[#073D2D]/10">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#126B4F] flex items-center gap-1.5 mb-1">
+          <Scale className="w-3.5 h-3.5 text-[#D6AD63]" /> Resource Equity
+        </span>
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#17231E] tracking-tight">Fair-Use Governance &amp; Quotas</h1>
+        <p className="text-xs text-[#17231E]/70 mt-1">
           Configure anti-monopolization limits and automated cooldown parameters across all shared equipment.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="border-[#073D2D]/10 bg-white/80">
+        <CardHeader className="border-b border-[#073D2D]/10 pb-4">
           <div className="flex items-center space-x-2">
-            <Scale className="w-5 h-5 text-brand-600" />
-            <h3 className="text-base font-bold text-slate-900">Universal Borrower Quota Limits</h3>
+            <Sliders className="w-5 h-5 text-[#126B4F]" />
+            <h3 className="text-base font-serif font-bold text-[#17231E]">Universal Borrower Quota Limits</h3>
           </div>
         </CardHeader>
 
-        <CardBody>
-          <form onSubmit={handleSave} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <CardBody className="p-6">
+          <form onSubmit={handleSave} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <FormField
                 label="Max Weekly Hours per User"
                 helperText="Rolling 7-day limit on reserved bench hours"
@@ -52,6 +55,7 @@ export function FairUseSettingsPage() {
                   step="0.5"
                   value={maxHours}
                   onChange={(e) => setMaxHours(Number(e.target.value))}
+                  className="border-[#073D2D]/15 focus:border-[#126B4F]"
                 />
               </FormField>
 
@@ -64,11 +68,12 @@ export function FairUseSettingsPage() {
                   type="number"
                   value={maxActive}
                   onChange={(e) => setMaxActive(Number(e.target.value))}
+                  className="border-[#073D2D]/15 focus:border-[#126B4F]"
                 />
               </FormField>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-3 border-t border-[#073D2D]/10">
               <FormField
                 label="Max Pending Requests Queue"
                 helperText="Limits concurrent unreviewed requests per borrower"
@@ -78,6 +83,7 @@ export function FairUseSettingsPage() {
                   type="number"
                   value={maxPending}
                   onChange={(e) => setMaxPending(Number(e.target.value))}
+                  className="border-[#073D2D]/15 focus:border-[#126B4F]"
                 />
               </FormField>
 
@@ -90,43 +96,18 @@ export function FairUseSettingsPage() {
                   type="number"
                   value={cooldownHours}
                   onChange={(e) => setCooldownHours(Number(e.target.value))}
+                  className="border-[#073D2D]/15 focus:border-[#126B4F]"
                 />
               </FormField>
             </div>
 
             <div className="flex justify-end pt-3">
-              <Button type="submit" loading={saving}>
-                <Check className="w-4 h-4 mr-1.5" />
+              <Button type="submit" loading={saving} className="bg-[#073D2D] hover:bg-[#126B4F] text-[#F7F1E5]">
+                <Check className="w-4 h-4 mr-1.5 text-[#D6AD63]" />
                 <span>Save Fair-Use Configuration</span>
               </Button>
             </div>
           </form>
-        </CardBody>
-      </Card>
-
-      {/* Anti-Monopolization Automated Flags (Section 7) */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <ShieldAlert className="w-5 h-5 text-amber-500" />
-            <h3 className="text-base font-bold text-slate-900">Anti-Monopolization System Flags</h3>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            FLAG ONLY — Flagged accounts notify department lab staff; a human administrator always reviews penalties.
-          </p>
-        </CardHeader>
-
-        <CardBody className="divide-y divide-slate-100 text-xs">
-          <div className="py-3 flex items-start justify-between gap-4">
-            <div>
-              <span className="font-bold text-slate-900 block">Rohan Verma (M.Tech Scholar)</span>
-              <span className="text-amber-700 font-medium">Flag: 3 consecutive reservations on Tektronix Oscilloscope</span>
-              <p className="text-[11px] text-slate-400 mt-0.5">Automated detection: 5.5 of 6.0 weekly hours booked.</p>
-            </div>
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded bg-amber-100 text-amber-800">
-              Under Review
-            </span>
-          </div>
         </CardBody>
       </Card>
     </div>

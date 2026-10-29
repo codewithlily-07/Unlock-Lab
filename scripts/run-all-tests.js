@@ -37,12 +37,16 @@ console.log('\n🚀 STARTING COMPLETE UNLOCKLAB AUTOMATED VERIFICATION');
 // 1. Database tests
 runStep('1. Database Schema, State Machine & Security Tests', 'node', ['supabase/tests/run_db_tests.js']);
 
-// 2. E2E Lifecycle test
-runStep('2. Full 10-Step Lifecycle E2E Journey Test', 'node', ['tests/e2e.test.js']);
+// 2. Real Database Platform & Multi-Branch Tests
+runStep('2. Real SQLite Database Platform Integration Tests', 'node', ['tests/database_platform.test.js']);
 
-// 3. Vite production bundle verification
-runStep('3. Vite Frontend Production Build Verification', 'npm', ['run', 'build']);
+// 3. E2E Lifecycle test
+runStep('3. Full 10-Step Lifecycle E2E Journey Test', 'node', ['tests/e2e.test.js']);
+
+// 4. Vite production bundle verification
+runStep('4. Vite Frontend Production Build Verification', 'npm', ['run', 'build']);
 
 console.log('\n======================================================');
 console.log('🏆 ALL TESTS AND BUILDS PASSED SUCCESSFULLY!');
 console.log('======================================================\n');
+

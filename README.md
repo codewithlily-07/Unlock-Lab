@@ -119,3 +119,4 @@ npm run test:all
 ## 📄 License & Hackathon Disclosure
 Built for the 48-Hour Hackathon. All demo accounts, student profiles, and equipment data are fictional.
 See [PROJECT_DOCUMENT.md](./PROJECT_DOCUMENT.md) for full architecture diagrams and design disclosures.
+

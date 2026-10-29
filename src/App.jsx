@@ -8,6 +8,7 @@ import { RoleGuard } from './components/layout/RoleGuard';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
+import { CampusesPage } from './pages/CampusesPage';
 import { AllocationExplainedPage } from './pages/AllocationExplainedPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/" element={<Layout />}>
               {/* Public Routes */}
               <Route index element={<LandingPage />} />
+              <Route path="campuses" element={<CampusesPage />} />
               <Route path="how-allocation-works" element={<AllocationExplainedPage />} />
               <Route path="login" element={<LoginPage />} />
               <Route path="register" element={<RegisterPage />} />

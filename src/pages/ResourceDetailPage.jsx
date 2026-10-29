@@ -1,366 +1,415 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { api } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
 import { FormField, Input, Textarea } from '../components/ui/FormField';
 import {
   MapPin,
   Clock,
-  ShieldAlert,
   ShieldCheck,
   CheckCircle2,
-  XCircle,
-  FileCheck2,
   Calendar,
   AlertTriangle,
   Info,
-  Sparkles,
-  QrCode,
+  ArrowLeft,
+  Users,
+  LogIn,
+  AlertCircle,
 } from 'lucide-react';
-import { formatDuration, formatCurrency } from '../lib/utils';
-import { QRScannerModal } from '../components/shared/QRScannerModal';
+import { formatDuration } from '../lib/utils';
 
 export function ResourceDetailPage() {
   const { id } = useParams();
-  const { profile } = useAuth();
+  const { currentUser } = useAuth();
   const { showToast } = useNotifications();
   const navigate = useNavigate();
 
   const [resource, setResource] = useState(null);
-  const [eligibility, setEligibility] = useState([]);
+  const [availability, setAvailability] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showQrModal, setShowQrModal] = useState(false);
+  const [availLoading, setAvailLoading] = useState(false);
 
   // Booking Form State
   const defaultDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const [bookingDate, setBookingDate] = useState(defaultDate);
   const [startTime, setStartTime] = useState('10:00');
-  const [durationMinutes, setDurationMinutes] = useState(120);
+  const [durationMinutes, setDurationMinutes] = useState(60);
   const [purpose, setPurpose] = useState('');
-  const [projectNeed, setProjectNeed] = useState('');
+  const [projectTitle, setProjectTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState('');
 
   useEffect(() => {
-    loadData();
-  }, [id, profile?.id]);
+    loadResource();
+  }, [id]);
 
-  async function loadData() {
-    setLoading(true);
-    const res = await api.getResource(id);
-    setResource(res);
-
-    if (res && profile?.id) {
-      const checklist = await api.checkEligibility(profile.id, res.id);
-      setEligibility(checklist);
+  useEffect(() => {
+    if (id && bookingDate) {
+      loadAvailability(bookingDate);
     }
-    setLoading(false);
+  }, [id, bookingDate]);
+
+  async function loadResource() {
+    setLoading(true);
+    try {
+      const res = await api.getResource(id);
+      setResource(res);
+      if (res) {
+        setDurationMinutes(res.min_duration_minutes || 60);
+      }
+    } catch (err) {
+      console.error('Failed to load resource:', err);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const allEligible = eligibility.length > 0 && eligibility.every((item) => item.passed);
+  async function loadAvailability(dateStr) {
+    setAvailLoading(true);
+    try {
+      const avail = await api.getAvailability(id, dateStr);
+      setAvailability(avail);
+    } catch (err) {
+      console.error('Failed to load availability:', err);
+    } finally {
+      setAvailLoading(false);
+    }
+  }
 
   async function handleBookingSubmit(e) {
     e.preventDefault();
+    setBookingError('');
+
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+
     if (!purpose.trim()) {
-      showToast('Booking purpose is required.', 'error');
+      setBookingError('Reservation purpose is required');
       return;
     }
 
     setSubmitting(true);
     try {
-      const startAt = new Date(`${bookingDate}T${startTime}:00`).toISOString();
-      const endAt = new Date(new Date(`${bookingDate}T${startTime}:00`).getTime() + durationMinutes * 60000).toISOString();
+      const startDateTime = new Date(`${bookingDate}T${startTime}:00`);
+      const endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60000);
 
       const booking = await api.requestBooking({
         resourceId: resource.id,
-        userId: profile.id,
-        startAt,
-        endAt,
-        purpose,
-        projectNeed,
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
+        purpose: purpose.trim(),
+        projectTitle: projectTitle ? projectTitle.trim() : null,
       });
 
-      setSubmitting(false);
-      showToast(`Booking request submitted (${booking.status})!`, 'success');
-      navigate(`/bookings/${booking.id}`);
+      showToast(`Reservation request submitted (${booking.status})!`, 'success');
+      navigate('/my-bookings');
     } catch (err) {
+      setBookingError(err.message || 'Error creating reservation');
+      showToast(err.message || 'Failed to submit booking', 'error');
+    } finally {
       setSubmitting(false);
-      showToast(err.message || 'Error creating booking', 'error');
     }
   }
 
   if (loading) {
-    return <div className="p-12 text-center text-xs text-slate-400">Loading equipment details...</div>;
+    return (
+      <div className="p-16 text-center text-xs font-semibold text-[#798C82]">
+        <div className="w-8 h-8 rounded-full border-2 border-[#126B4F] border-t-transparent animate-spin mx-auto mb-3" />
+        <span>Loading resource details...</span>
+      </div>
+    );
   }
 
   if (!resource) {
-    return <div className="p-12 text-center text-xs text-slate-400">Equipment not found.</div>;
+    return (
+      <div className="p-12 text-center bg-white rounded-2xl border border-[#E8E2D2] shadow-sm space-y-4 max-w-md mx-auto my-12">
+        <AlertCircle className="w-10 h-10 text-[#c2413a] mx-auto" />
+        <h2 className="text-base font-bold text-[#17231E]">Resource Not Found</h2>
+        <p className="text-xs text-[#4A5B53]">The requested laboratory resource does not exist in the database.</p>
+        <Link to="/campuses">
+          <Button size="sm" variant="primary">
+            Return to Campuses
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
+  const bookedSlots = availability?.booked_slots || [];
+
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Top Banner & Title */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2">
-          {/* Photos */}
-          <div className="h-72 md:h-full relative bg-slate-100">
-            <img
-              src={resource.photos[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80'}
-              alt={resource.name}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute top-4 left-4">
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-900/80 text-white backdrop-blur-sm">
-                {resource.category}
-              </span>
-            </div>
-          </div>
+    <div className="space-y-6 pb-12">
+      <Link
+        to="/campuses"
+        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#126B4F] hover:underline"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back to Campus Facilities</span>
+      </Link>
 
-          {/* Core Info */}
-          <div className="p-6 md:p-8 flex flex-col justify-between space-y-4">
-            <div>
-              <div className="flex items-center space-x-2 mb-2">
-                <Badge variant={resource.requires_approval ? 'warning' : 'success'} size="sm">
-                  {resource.requires_approval ? 'Approval Required' : 'Instant Access'}
-                </Badge>
-                {resource.requires_deposit && (
-                  <Badge variant="purple" size="sm">
-                    Deposit: {formatCurrency(resource.deposit_amount)}
-                  </Badge>
-                )}
-                {resource.supervision_required && (
-                  <Badge variant="danger" size="sm">
-                    Faculty Supervision Req
-                  </Badge>
-                )}
-              </div>
-
-              <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 leading-snug">
-                {resource.name}
-              </h1>
-
-              <p className="text-xs text-slate-600 mt-2.5 leading-relaxed">
-                {resource.description}
-              </p>
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-600">
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                <span className="font-medium text-slate-800">{resource.location}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>
-                  Booking Range: {formatDuration(resource.min_booking_minutes)} to{' '}
-                  {formatDuration(resource.max_booking_minutes)} (up to {resource.advance_booking_days} days in advance)
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Resource Profile */}
+        <div className="lg:col-span-7 space-y-6">
+          <Card className="border-[#E5DDD0] overflow-hidden">
+            <div className="relative h-64 sm:h-80 w-full bg-[#E8EFE6]">
+              {resource.photos && resource.photos[0] ? (
+                <img
+                  src={resource.photos[0]}
+                  alt={resource.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[#103C2D]">
+                  <Users className="w-16 h-16 opacity-30" />
+                </div>
+              )}
+              <div className="absolute top-4 left-4 flex gap-2">
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#073D2D]/90 text-white backdrop-blur-sm">
+                  {resource.type}
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/95 text-[#103C2D] shadow-sm">
+                  {resource.requires_approval ? 'Approval Required' : 'Instant Booking'}
                 </span>
               </div>
-              <div className="flex items-center justify-between pt-1">
-                <div className="flex items-center space-x-2">
-                  <QrCode className="w-4 h-4 text-brand-600 shrink-0" />
-                  <span className="text-[11px] text-slate-500 font-mono">Token: {resource.qr_token}</span>
-                </div>
-                <button
-                  onClick={() => setShowQrModal(true)}
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 hover:underline"
-                >
-                  <QrCode className="w-3.5 h-3.5" />
-                  <span>Print QR Bench Tag</span>
-                </button>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Main Grid: Rules & Eligibility on Left, Request Form on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Requirements, Safety, Rules */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Section 6: Real-Time Eligibility Checklist */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <ShieldCheck className="w-5 h-5 text-brand-600" />
-                  <h3 className="text-base font-bold text-slate-900">Your Eligibility Checklist</h3>
-                </div>
-                <Badge variant={allEligible ? 'success' : 'danger'} size="sm">
-                  {allEligible ? 'Eligible to Book' : 'Prerequisites Missing'}
-                </Badge>
+            <CardBody className="p-6 sm:p-8 space-y-5">
+              <div>
+                <span className="text-xs font-bold text-[#126B4F] uppercase tracking-wider block mb-1">
+                  {resource.department_name || 'Campus Wide Facility'}
+                </span>
+                <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#17231E] leading-tight">
+                  {resource.name}
+                </h1>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Automated check for active user account, safety credentials, and weekly fair-use quotas.
-              </p>
-            </CardHeader>
 
-            <CardBody className="p-0 divide-y divide-slate-100">
-              {eligibility.map((item, idx) => (
-                <div key={idx} className="p-4 flex items-start justify-between gap-4">
-                  <div className="flex items-start space-x-3">
-                    {item.passed ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                    )}
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-800">{item.requirement}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{item.message}</p>
-                      {item.how_to_fix && (
-                        <div className="mt-1.5 flex items-center space-x-2">
-                          <span className="text-[11px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                            Action: {item.how_to_fix}
-                          </span>
-                          <Link
-                            to="/credentials"
-                            className="text-[11px] font-bold text-brand-600 hover:underline"
-                          >
-                            Go to Credentials &rarr;
-                          </Link>
-                        </div>
-                      )}
-                    </div>
+              <p className="text-sm text-[#4A5B53] leading-relaxed">
+                {resource.description || 'Verified institutional facility ready for reservations.'}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-3 border-y border-[#E8E2D2] text-xs">
+                <div className="space-y-1">
+                  <span className="text-[#798C82] font-semibold block">Campus Location</span>
+                  <div className="flex items-center gap-1.5 font-bold text-[#17231E]">
+                    <MapPin className="w-4 h-4 text-[#D87E3A] shrink-0" />
+                    <span>{resource.location}</span>
                   </div>
                 </div>
-              ))}
-            </CardBody>
-          </Card>
 
-          {/* Usage Rules & Safety Notes */}
-          <Card>
-            <CardHeader>
-              <h3 className="text-base font-bold text-slate-900">Bench Usage Rules &amp; Safety Protocols</h3>
-            </CardHeader>
-            <CardBody className="space-y-4">
-              {resource.safety_notes && (
-                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start space-x-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="block font-bold">Safety Note:</strong>
-                    <span>{resource.safety_notes}</span>
+                <div className="space-y-1">
+                  <span className="text-[#798C82] font-semibold block">Operating Schedule</span>
+                  <div className="flex items-center gap-1.5 font-bold text-[#17231E]">
+                    <Clock className="w-4 h-4 text-[#103C2D] shrink-0" />
+                    <span>
+                      {resource.operating_hours_start} – {resource.operating_hours_end} Daily
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[#798C82] font-semibold block">Booking Bounds</span>
+                  <span className="font-bold text-[#17231E] block">
+                    Min {formatDuration(resource.min_duration_minutes)} &middot; Max{' '}
+                    {formatDuration(resource.max_duration_minutes)}
+                  </span>
+                </div>
+
+                {resource.capacity > 1 && (
+                  <div className="space-y-1">
+                    <span className="text-[#798C82] font-semibold block">Capacity</span>
+                    <span className="font-bold text-[#17231E] block">Up to {resource.capacity} occupants</span>
+                  </div>
+                )}
+              </div>
+
+              {resource.facilities && resource.facilities.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-[#17231E] uppercase tracking-wider">
+                    Available Facilities &amp; Equipment
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {resource.facilities.map((fac, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#FAF9F5] text-[#17231E] border border-[#E8E2D2]"
+                      >
+                        {fac}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
 
-              <div>
-                <h4 className="text-xs font-bold uppercase text-slate-700 mb-2">Mandatory Operating Procedures</h4>
-                <ul className="space-y-2 text-xs text-slate-600">
-                  {resource.usage_rules.map((rule, idx) => (
-                    <li key={idx} className="flex items-start space-x-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
-                      <span>{rule}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {resource.safety_guidelines && (
+                <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E8E2D2] text-xs space-y-1 text-[#4A5B53]">
+                  <span className="font-bold text-[#17231E] block">Laboratory Safety &amp; Usage Rules</span>
+                  <p className="leading-relaxed">{resource.safety_guidelines}</p>
+                </div>
+              )}
             </CardBody>
           </Card>
         </div>
 
-        {/* Right Column: Interactive Booking Request Form */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-brand-600" />
-                <h3 className="text-base font-bold text-slate-900">Request Reservation</h3>
-              </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Select your preferred bench slot. Competing slots are queued into the transparent waitlist.
+        {/* Right Column: Reservation & Availability Schedule */}
+        <div className="lg:col-span-5 space-y-6">
+          <Card className="border-[#E5DDD0] shadow-sm">
+            <CardHeader className="p-5 pb-3 border-b border-[#E8E2D2]">
+              <h2 className="text-base font-bold text-[#17231E] flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-[#103C2D]" />
+                <span>Reserve this Facility</span>
+              </h2>
+              <p className="text-xs text-[#4A5B53] mt-0.5">
+                Check real-time slot availability and submit a reservation request.
               </p>
             </CardHeader>
 
-            <CardBody>
-              <form onSubmit={handleBookingSubmit} className="space-y-4 text-left">
-                <FormField label="Reservation Date" required>
-                  <Input
-                    type="date"
-                    required
-                    min={new Date().toISOString().split('T')[0]}
-                    value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                  />
-                </FormField>
+            <CardBody className="p-5 space-y-4">
+              {bookingError && (
+                <div className="p-3.5 rounded-xl bg-[#fdf2f1] border border-[#c2413a]/30 text-[#c2413a] text-xs font-semibold flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{bookingError}</span>
+                </div>
+              )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Start Time" required>
-                    <Input
-                      type="time"
-                      required
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                    />
-                  </FormField>
+              {/* Date Selection */}
+              <FormField label="Reservation Date" required>
+                <Input
+                  type="date"
+                  value={bookingDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setBookingDate(e.target.value)}
+                  className="text-xs font-medium"
+                />
+              </FormField>
 
-                  <FormField label="Duration" required>
-                    <Input
-                      type="number"
-                      step="30"
-                      min={resource.min_booking_minutes}
-                      max={resource.max_booking_minutes}
-                      value={durationMinutes}
-                      onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                    />
-                  </FormField>
+              {/* Real Availability Inspection for Selected Date */}
+              <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E8E2D2] space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-[#17231E]">Booked Slots on {bookingDate}:</span>
+                  <span className="text-[11px] text-[#798C82]">
+                    {availLoading ? 'Checking...' : `${bookedSlots.length} reserved`}
+                  </span>
                 </div>
 
-                <FormField
-                  label="Purpose of Usage"
-                  required
-                  helperText="Describe circuit, IC, or protocol being tested"
-                >
-                  <Textarea
-                    required
-                    placeholder="e.g. Measuring 100MHz clock jitter on SPI bus for senior year capstone..."
-                    value={purpose}
-                    onChange={(e) => setPurpose(e.target.value)}
-                  />
-                </FormField>
+                {bookedSlots.length === 0 ? (
+                  <div className="text-[11px] text-[#126B4F] font-semibold flex items-center gap-1.5 py-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Entire operating schedule is currently available!</span>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto pt-1">
+                    {bookedSlots.map((slot) => {
+                      const start = new Date(slot.start_time).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+                      const end = new Date(slot.end_time).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+                      return (
+                        <div
+                          key={slot.id}
+                          className="flex items-center justify-between text-[11px] p-2 rounded-lg bg-[#fdf2f1] border border-[#c2413a]/20 text-[#c2413a] font-medium"
+                        >
+                          <span>
+                            {start} – {end}
+                          </span>
+                          <span className="uppercase text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/60">
+                            Occupied
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
-                <FormField
-                  label="Academic / Project Need (Optional)"
-                  helperText="Declaration grants +10 pts on fair waitlist score"
-                >
-                  <Input
-                    placeholder="e.g. IEEE Conference Paper / Capstone Evaluation"
-                    value={projectNeed}
-                    onChange={(e) => setProjectNeed(e.target.value)}
-                  />
-                </FormField>
+              {currentUser ? (
+                <form onSubmit={handleBookingSubmit} className="space-y-4 pt-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label="Start Time" required>
+                      <Input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className="text-xs font-medium"
+                      />
+                    </FormField>
 
-                {/* Submit Action */}
-                <div className="pt-2">
+                    <FormField label="Duration (Minutes)" required>
+                      <select
+                        value={durationMinutes}
+                        onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-[#E8E2D2] bg-white font-medium"
+                      >
+                        <option value={30}>30 mins</option>
+                        <option value={60}>1 hour</option>
+                        <option value={90}>1.5 hours</option>
+                        <option value={120}>2 hours</option>
+                        <option value={180}>3 hours</option>
+                        <option value={240}>4 hours</option>
+                      </select>
+                    </FormField>
+                  </div>
+
+                  <FormField label="Purpose / Research Project" required>
+                    <Textarea
+                      required
+                      placeholder="Specify your academic purpose, coursework, or research project..."
+                      rows={2}
+                      value={purpose}
+                      onChange={(e) => setPurpose(e.target.value)}
+                      className="text-xs"
+                    />
+                  </FormField>
+
+                  <FormField label="Project Title (Optional)">
+                    <Input
+                      placeholder="e.g. Capstone Project Team 4"
+                      value={projectTitle}
+                      onChange={(e) => setProjectTitle(e.target.value)}
+                      className="text-xs"
+                    />
+                  </FormField>
+
                   <Button
                     type="submit"
-                    className="w-full"
+                    variant="primary"
+                    className="w-full font-bold bg-[#103C2D] hover:bg-[#185340] text-white py-2.5 rounded-xl text-xs"
                     loading={submitting}
-                    disabled={!allEligible}
                   >
-                    {allEligible ? 'Submit Booking Request' : 'Resolve Missing Prerequisites First'}
+                    Submit Reservation Request
                   </Button>
-                </div>
-
-                {!allEligible && (
-                  <p className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200 leading-tight">
-                    Review the eligibility checklist on the left to complete safety training before requesting.
+                </form>
+              ) : (
+                <div className="pt-2 text-center space-y-3">
+                  <p className="text-xs text-[#4A5B53]">
+                    You must be signed in with an institutional account to request reservations.
                   </p>
-                )}
-              </form>
+                  <Link
+                    to="/login"
+                    state={{ from: { pathname: `/resources/${resource.id}` } }}
+                    className="block"
+                  >
+                    <Button variant="primary" className="w-full font-bold bg-[#103C2D] text-white text-xs">
+                      <LogIn className="w-4 h-4 mr-1.5" />
+                      Sign In to Reserve
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </CardBody>
           </Card>
         </div>
       </div>
-
-      <QRScannerModal
-        isOpen={showQrModal}
-        onClose={() => setShowQrModal(false)}
-        resource={resource}
-      />
     </div>
   );
 }
 
+export default ResourceDetailPage;

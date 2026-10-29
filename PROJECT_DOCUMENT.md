@@ -191,3 +191,4 @@ UnlockLab provides a **1-Click Demo Persona Switcher** in the top navigation bar
 - **Lead Full-Stack Engineer**: *UnlockLab Engineering Team*
 - **Product & Systems Designer**: *ECE Department Lab Operations*
 - **Database & Security Architect**: *Institutional Infrastructure Team*
+

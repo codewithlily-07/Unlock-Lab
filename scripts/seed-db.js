@@ -22,3 +22,4 @@ if (fs.existsSync(seedSqlPath)) {
   console.error('❌ seed.sql not found');
   process.exit(1);
 }
+

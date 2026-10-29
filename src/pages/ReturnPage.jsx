@@ -76,11 +76,24 @@ export function ReturnPage() {
   }
 
   if (loading) {
-    return <div className="p-12 text-center text-xs text-slate-400">Loading return handover inspection...</div>;
+    return (
+      <div className="p-16 text-center text-xs font-semibold text-[#798C82]">
+        <div className="w-8 h-8 rounded-full border-2 border-[#126B4F] border-t-transparent animate-spin mx-auto mb-3" />
+        <span>Loading return handover inspection...</span>
+      </div>
+    );
   }
 
   if (!booking || !resource) {
-    return <div className="p-12 text-center text-xs text-slate-400">Booking not found.</div>;
+    return (
+      <div className="p-12 text-center bg-white rounded-2xl border border-[#E8E2D2] shadow-soft-sm space-y-3">
+        <h3 className="text-base font-bold text-[#17231E]">Booking Not Found</h3>
+        <p className="text-xs text-[#4A5B53]">The requested reservation could not be loaded.</p>
+        <Button size="sm" onClick={() => navigate('/my-bookings')}>
+          Back to My Bookings
+        </Button>
+      </div>
+    );
   }
 
   const isOverdue = booking.status === 'overdue' || new Date() > new Date(booking.end_at);
@@ -90,74 +103,76 @@ export function ReturnPage() {
       <div className="flex items-center space-x-3">
         <button
           onClick={() => navigate(`/bookings/${booking.id}`)}
-          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600"
+          className="p-2 rounded-xl border border-[#E8E2D2] bg-white hover:bg-[#F7F1E5] text-[#17231E] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Step 8: Return Handover &amp; Inspection</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#17231E] font-sans">
+            Step 8: Return Handover &amp; Inspection
+          </h1>
+          <p className="text-xs sm:text-sm text-[#4A5B53]">
             Compare final condition against initial handover notes and conclude custody.
           </p>
         </div>
       </div>
 
       {isOverdue && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start space-x-3">
-          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-          <div>
+        <div className="p-4 rounded-2xl bg-[#fdf2f1] border border-[#c2413a]/30 text-[#c2413a] text-xs flex items-start space-x-3">
+          <AlertTriangle className="w-5 h-5 text-[#c2413a] shrink-0 mt-0.5" />
+          <div className="leading-relaxed">
             <strong>Late Return Detected:</strong> This reservation was scheduled to end at{' '}
             <strong>{formatDateTime(booking.end_at)}</strong>. A late return is recorded in usage statistics and triggers a 48-hour cooldown on future reservations.
           </div>
         </div>
       )}
 
-      {/* Before-vs-After Comparison Box (Section 8) */}
+      {/* Before-vs-After Comparison Box */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#126B4F]">
               Before-vs-After Custody Comparison
             </span>
-            <span className="text-xs text-slate-500 font-mono">ID: {booking.id.substring(0, 8)}</span>
+            <span className="text-xs text-[#798C82] font-mono">ID: {booking.id.substring(0, 8)}</span>
           </div>
-          <h3 className="text-base font-bold text-slate-900 mt-1">{resource.name}</h3>
+          <h3 className="text-lg font-bold text-[#17231E] mt-1 font-sans">{resource.name}</h3>
         </CardHeader>
 
-        <CardBody className="space-y-4">
+        <CardBody className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             {/* Initial Condition at Check-in */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+            <div className="p-4 rounded-2xl bg-[#FFFCF5] border border-[#E8E2D2]">
+              <span className="text-[10px] font-bold text-[#798C82] uppercase tracking-wider block mb-1">
                 Before: Initial Check-In State
               </span>
-              <div className="font-bold text-slate-900 text-sm capitalize mb-1">
+              <div className="font-bold text-[#17231E] text-sm capitalize mb-1">
                 Condition: {booking.initial_condition || 'Excellent'}
               </div>
-              <p className="text-slate-600 italic">
+              <p className="text-[#4A5B53] italic">
                 "{booking.initial_notes || 'Clean condition verified upon check-in'}"
               </p>
-              <span className="text-[10px] text-slate-400 mt-2 block">
+              <span className="text-[10px] text-[#798C82] mt-2 block">
                 Checked In: {formatDateTime(booking.checked_in_at || booking.start_at)}
               </span>
             </div>
 
             {/* Final Return Condition Form */}
-            <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-200">
-              <span className="text-[10px] font-bold text-brand-700 uppercase tracking-wider block mb-1">
+            <div className="p-4 rounded-2xl bg-[#f0f7f4] border border-[#126B4F]/30">
+              <span className="text-[10px] font-bold text-[#126B4F] uppercase tracking-wider block mb-1">
                 After: Final Return State
               </span>
-              <div className="font-bold text-brand-900 text-sm capitalize mb-1">
+              <div className="font-bold text-[#073D2D] text-sm capitalize mb-1">
                 Condition: {condition}
               </div>
-              <p className="text-slate-600 italic">"{notes}"</p>
-              <span className="text-[10px] text-brand-600 mt-2 block">
+              <p className="text-[#4A5B53] italic">"{notes}"</p>
+              <span className="text-[10px] text-[#126B4F] mt-2 block">
                 Returning Now: {formatDateTime(new Date().toISOString())}
               </span>
             </div>
           </div>
 
-          <form onSubmit={handleReturnSubmit} className="space-y-5 pt-3 border-t border-slate-100">
+          <form onSubmit={handleReturnSubmit} className="space-y-5 pt-3 border-t border-[#F0ECE0] text-left">
             <FormField label="Final Observed Physical Condition" required>
               <Select value={condition} onChange={(e) => setCondition(e.target.value)}>
                 <option value="excellent">Excellent — Pristine condition, cleaned and calibrated</option>
@@ -177,15 +192,15 @@ export function ReturnPage() {
             </FormField>
 
             {/* Damage Reporting Toggle */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-              <label className="flex items-center space-x-2 text-xs font-bold text-slate-800 cursor-pointer">
+            <div className="p-4 rounded-2xl bg-[#FFFCF5] border border-[#E8E2D2] space-y-3">
+              <label className="flex items-center space-x-2 text-xs font-bold text-[#17231E] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={flagDamage}
                   onChange={(e) => setFlagDamage(e.target.checked)}
-                  className="rounded text-rose-600 focus:ring-rose-500 w-4 h-4"
+                  className="rounded text-[#c2413a] focus:ring-[#c2413a] w-4 h-4 accent-[#c2413a]"
                 />
-                <span className="text-rose-700">Flag Damage, Malfunction, or Missing Accessory</span>
+                <span className="text-[#c2413a]">Flag Damage, Malfunction, or Missing Accessory</span>
               </label>
 
               {(flagDamage || condition === 'damaged') && (
@@ -217,6 +232,7 @@ export function ReturnPage() {
                 type="submit"
                 variant={flagDamage || condition === 'damaged' ? 'danger' : 'primary'}
                 loading={submitting}
+                className="font-bold"
               >
                 <RotateCcw className="w-4 h-4 mr-1.5" />
                 <span>
@@ -230,3 +246,5 @@ export function ReturnPage() {
     </div>
   );
 }
+
+export default ReturnPage;

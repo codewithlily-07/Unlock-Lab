@@ -76,11 +76,24 @@ export function CheckInPage() {
   }
 
   if (loading) {
-    return <div className="p-12 text-center text-xs text-slate-400">Loading check-in inspection...</div>;
+    return (
+      <div className="p-16 text-center text-xs font-semibold text-[#798C82]">
+        <div className="w-8 h-8 rounded-full border-2 border-[#126B4F] border-t-transparent animate-spin mx-auto mb-3" />
+        <span>Loading check-in inspection...</span>
+      </div>
+    );
   }
 
   if (!booking || !resource) {
-    return <div className="p-12 text-center text-xs text-slate-400">Booking not found.</div>;
+    return (
+      <div className="p-12 text-center bg-white rounded-2xl border border-[#E8E2D2] shadow-soft-sm space-y-3">
+        <h3 className="text-base font-bold text-[#17231E]">Booking Not Found</h3>
+        <p className="text-xs text-[#4A5B53]">The requested reservation could not be loaded.</p>
+        <Button size="sm" onClick={() => navigate('/my-bookings')}>
+          Back to My Bookings
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -88,14 +101,16 @@ export function CheckInPage() {
       <div className="flex items-center space-x-3">
         <button
           onClick={() => navigate(`/bookings/${booking.id}`)}
-          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600"
+          className="p-2 rounded-xl border border-[#E8E2D2] bg-white hover:bg-[#F7F1E5] text-[#17231E] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Step 7: Check-In &amp; Initial Inspection</h1>
-          <p className="text-xs text-slate-500">
-            Verify equipment physical condition before taking custody.
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#17231E] font-sans">
+            Step 7: Check-In &amp; Initial Inspection
+          </h1>
+          <p className="text-xs sm:text-sm text-[#4A5B53]">
+            Verify physical condition and accept custody before starting your session.
           </p>
         </div>
       </div>
@@ -103,24 +118,24 @@ export function CheckInPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#126B4F]">
               Handover Custody Verification
             </span>
-            <span className="text-xs text-slate-500 font-mono">Slot: {formatDateTime(booking.start_at)}</span>
+            <span className="text-xs text-[#798C82] font-mono">Slot: {formatDateTime(booking.start_at)}</span>
           </div>
-          <h3 className="text-base font-bold text-slate-900 mt-1">{resource.name}</h3>
-          <p className="text-xs text-slate-500">{resource.location}</p>
+          <h3 className="text-lg font-bold text-[#17231E] mt-1 font-sans">{resource.name}</h3>
+          <p className="text-xs text-[#4A5B53]">{resource.location}</p>
         </CardHeader>
 
         <CardBody>
-          <form onSubmit={handleCheckInSubmit} className="space-y-5">
+          <form onSubmit={handleCheckInSubmit} className="space-y-5 text-left">
             {/* Initial Condition Rating */}
             <FormField label="Initial Physical Condition at Pickup" required>
               <Select value={condition} onChange={(e) => setCondition(e.target.value)}>
                 <option value="excellent">Excellent — Pristine, fully calibrated, clean accessories</option>
                 <option value="good">Good — Operational, minor cosmetic wear, all parts present</option>
                 <option value="fair">Fair — Functional but shows noticeable wear or quirks</option>
-                <option value="damaged">Damaged / Pre-existing defect — (Do not take custody without manager report)</option>
+                <option value="damaged">Damaged / Pre-existing defect — (Report to manager before pickup)</option>
               </Select>
             </FormField>
 
@@ -139,27 +154,27 @@ export function CheckInPage() {
 
             {/* Photo Handover Simulation */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Condition Verification Photo
+              <label className="block text-xs font-bold text-[#17231E] mb-1.5">
+                Condition Verification Evidence
               </label>
-              <div className="p-4 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 text-center flex flex-col items-center justify-center space-y-1.5">
-                <Camera className="w-6 h-6 text-slate-400" />
-                <span className="text-xs font-medium text-slate-700">Photo Evidence Recorded</span>
-                <span className="text-[10px] text-slate-400">Timestamped snapshot tied to handover report</span>
+              <div className="p-5 rounded-2xl border-2 border-dashed border-[#D6C4A4] bg-[#FFFCF5] text-center flex flex-col items-center justify-center space-y-1.5">
+                <Camera className="w-6 h-6 text-[#126B4F]" />
+                <span className="text-xs font-bold text-[#17231E]">Photo Evidence Recorded &amp; Hash-Stamped</span>
+                <span className="text-[10px] text-[#798C82]">Timestamped snapshot tied to append-only custody report</span>
               </div>
             </div>
 
             {/* Rules Acceptance Checkbox */}
-            <div className="pt-2 border-t border-slate-100">
-              <label className="flex items-start space-x-3 p-3 rounded-xl bg-blue-50/60 border border-blue-200 cursor-pointer">
+            <div className="pt-2 border-t border-[#F0ECE0]">
+              <label className="flex items-start space-x-3 p-3.5 rounded-2xl bg-[#f0f7f4] border border-[#126B4F]/30 cursor-pointer">
                 <input
                   type="checkbox"
                   required
                   checked={acceptedRules}
                   onChange={(e) => setAcceptedRules(e.target.checked)}
-                  className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 mt-0.5"
+                  className="rounded text-[#126B4F] focus:ring-[#126B4F] w-4 h-4 mt-0.5 accent-[#126B4F]"
                 />
-                <span className="text-xs text-blue-900 leading-relaxed">
+                <span className="text-xs text-[#073D2D] leading-relaxed">
                   I accept physical custody of this equipment. I agree to adhere to the published laboratory
                   operating procedures, return the equipment promptly by{' '}
                   <strong>{formatDateTime(booking.end_at)}</strong>, and report any observed defects immediately.
@@ -175,7 +190,7 @@ export function CheckInPage() {
               >
                 Cancel
               </Button>
-              <Button type="submit" variant="success" loading={submitting} disabled={!acceptedRules}>
+              <Button type="submit" variant="success" loading={submitting} disabled={!acceptedRules} className="font-bold">
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
                 <span>Confirm Check-In &amp; Take Custody</span>
               </Button>
@@ -186,3 +201,5 @@ export function CheckInPage() {
     </div>
   );
 }
+
+export default CheckInPage;

@@ -1,132 +1,170 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { ShieldCheck, ShieldAlert, Award, Calendar, Building, Mail, Phone, Briefcase } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import {
+  ShieldCheck,
+  Building,
+  Mail,
+  Phone,
+  Briefcase,
+  Calendar,
+  Clock,
+  ArrowRight,
+  LogOut,
+  User,
+} from 'lucide-react';
 
 export function ProfilePage() {
-  const { profile, isVerified } = useAuth();
+  const { currentUser, logout } = useAuth();
+  const [userBookings, setUserBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      loadBookings();
+    }
+  }, [currentUser]);
+
+  async function loadBookings() {
+    setLoading(true);
+    try {
+      const data = await api.getBookings();
+      setUserBookings(data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="p-12 text-center bg-white rounded-2xl border border-[#E8E2D2] shadow-sm space-y-4 max-w-md mx-auto my-12">
+        <User className="w-10 h-10 text-[#103C2D] mx-auto" />
+        <h2 className="text-base font-bold text-[#17231E]">Sign In Required</h2>
+        <p className="text-xs text-[#4A5B53]">Please sign in with your institutional credentials to view your profile.</p>
+        <Link to="/login">
+          <Button size="sm" variant="primary">
+            Sign In
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const approvedCount = userBookings.filter((b) => b.status === 'approved').length;
+  const pendingCount = userBookings.filter((b) => b.status === 'pending').length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* Profile Header Card */}
-      <Card>
-        <CardBody className="p-8">
+      <Card className="border-[#E5DDD0]">
+        <CardBody className="p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-2xl bg-brand-600 text-white font-extrabold text-2xl flex items-center justify-center shadow-md">
-                {profile?.full_name ? profile.full_name[0] : 'U'}
+              <div className="w-16 h-16 rounded-2xl bg-[#073D2D] text-[#FFFCF5] font-black text-2xl flex items-center justify-center shadow-md border border-[#D6AD63]/50">
+                {currentUser.full_name ? currentUser.full_name[0] : 'U'}
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h1 className="text-xl font-bold text-slate-900">{profile?.full_name}</h1>
-                  {isVerified ? (
-                    <Badge variant="success" size="sm" className="flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Verified Identity</span>
-                    </Badge>
-                  ) : (
-                    <Badge variant="warning" size="sm" className="flex items-center gap-1">
-                      <ShieldAlert className="w-3.5 h-3.5" />
-                      <span>Unverified</span>
-                    </Badge>
-                  )}
+                  <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#17231E]">
+                    {currentUser.full_name}
+                  </h1>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#f0f7f4] text-[#126B4F] border border-[#126B4F]/30">
+                    {currentUser.role === 'admin' ? 'Administrator' : 'Verified User'}
+                  </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  {profile?.year_or_designation} · {profile?.department}
+                <p className="text-xs text-[#4A5B53] mt-1">
+                  {currentUser.academic_program} &middot; {currentUser.department_name || 'Academic Dept'}
                 </p>
-                <p className="text-xs text-slate-600 font-medium">{profile?.organization}</p>
+                <p className="text-xs text-[#126B4F] font-bold mt-0.5">{currentUser.email}</p>
               </div>
             </div>
 
-            <div className="text-left sm:text-right text-xs text-slate-500">
-              <span className="font-semibold text-slate-700 uppercase tracking-wider block">Assigned Role</span>
-              <span className="text-sm font-bold text-brand-600 uppercase">{profile?.role}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  await logout();
+                  navigate('/');
+                }}
+                className="text-xs font-bold text-[#c2413a] hover:bg-[#fdf2f1] border-[#c2413a]/30"
+              >
+                <LogOut className="w-3.5 h-3.5 mr-1" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </CardBody>
       </Card>
 
-      {/* Reliability Score Card (Section 13 Tier B) */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Award className="w-5 h-5 text-amber-500" />
-              <h3 className="text-base font-bold text-slate-900">Borrower Reliability Rating</h3>
-            </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
-              96 / 100 · High Trust Standing
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Informational accountability metric based on verified equipment returns and clean condition checks.
-          </p>
+      {/* Account Details & Real Reservation Telemetry */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-[#E5DDD0]">
+          <CardBody className="p-5 text-center space-y-1">
+            <span className="text-xs text-[#798C82] font-semibold block">Total Reservations</span>
+            <div className="text-2xl font-bold text-[#17231E]">{userBookings.length}</div>
+            <p className="text-[11px] text-[#4A5B53]">Logged in database</p>
+          </CardBody>
+        </Card>
+
+        <Card className="border-[#E5DDD0]">
+          <CardBody className="p-5 text-center space-y-1">
+            <span className="text-xs text-[#798C82] font-semibold block">Approved Bookings</span>
+            <div className="text-2xl font-bold text-[#126B4F]">{approvedCount}</div>
+            <p className="text-[11px] text-[#4A5B53]">Confirmed scheduled bench time</p>
+          </CardBody>
+        </Card>
+
+        <Card className="border-[#E5DDD0]">
+          <CardBody className="p-5 text-center space-y-1">
+            <span className="text-xs text-[#798C82] font-semibold block">Pending Requests</span>
+            <div className="text-2xl font-bold text-[#D87E3A]">{pendingCount}</div>
+            <p className="text-[11px] text-[#4A5B53]">In administrative review queue</p>
+          </CardBody>
+        </Card>
+      </div>
+
+      {/* Institutional Details */}
+      <Card className="border-[#E5DDD0]">
+        <CardHeader className="p-5 border-b border-[#E8E2D2]">
+          <h3 className="text-sm font-bold text-[#17231E]">Academic Profile Data</h3>
         </CardHeader>
-
-        <CardBody>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div className="text-2xl font-bold text-slate-900">4</div>
-              <div className="text-xs text-slate-500 mt-0.5">Clean Handover Returns</div>
-              <div className="text-[10px] text-emerald-600 font-semibold mt-1">+8 pts bonus</div>
-            </div>
-
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div className="text-2xl font-bold text-slate-900">0</div>
-              <div className="text-xs text-slate-500 mt-0.5">Late Returns</div>
-              <div className="text-[10px] text-slate-400 mt-1">-10 pts per late return</div>
-            </div>
-
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div className="text-2xl font-bold text-slate-900">0</div>
-              <div className="text-xs text-slate-500 mt-0.5">No-Show Cancellations</div>
-              <div className="text-[10px] text-slate-400 mt-1">-15 pts per no-show</div>
-            </div>
-
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div className="text-2xl font-bold text-slate-900">0</div>
-              <div className="text-xs text-slate-500 mt-0.5">Hardware Incidents</div>
-              <div className="text-[10px] text-slate-400 mt-1">-20 pts per incident</div>
-            </div>
-          </div>
-
-          <div className="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-xs">
-            <strong>Fairness Guarantee:</strong> Reliability scores provide small informational weight in the waitlist priority formula.
-            A low score <em>never</em> blocks a borrower from requesting equipment. Important safety decisions are always reviewed by a human manager.
-          </div>
-        </CardBody>
-      </Card>
-
-      {/* Account Details */}
-      <Card>
-        <CardHeader>
-          <h3 className="text-base font-bold text-slate-900">Institutional Details</h3>
-        </CardHeader>
-        <CardBody className="divide-y divide-slate-100 text-xs">
-          <div className="py-2.5 flex items-center justify-between">
-            <span className="text-slate-500 flex items-center gap-2">
-              <Mail className="w-4 h-4 text-slate-400" /> Email Address
+        <CardBody className="divide-y divide-[#F0ECE0] text-xs">
+          <div className="py-3 flex items-center justify-between">
+            <span className="text-[#4A5B53] flex items-center gap-2">
+              <Mail className="w-4 h-4 text-[#798C82]" /> Institutional Email
             </span>
-            <span className="font-semibold text-slate-800">{profile?.email}</span>
+            <span className="font-bold text-[#17231E]">{currentUser.email}</span>
           </div>
-          <div className="py-2.5 flex items-center justify-between">
-            <span className="text-slate-500 flex items-center gap-2">
-              <Building className="w-4 h-4 text-slate-400" /> Institution
+
+          <div className="py-3 flex items-center justify-between">
+            <span className="text-[#4A5B53] flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-[#798C82]" /> Academic Department
             </span>
-            <span className="font-semibold text-slate-800">{profile?.organization}</span>
+            <span className="font-bold text-[#17231E]">
+              {currentUser.department_name || 'Interdisciplinary / Not Specified'}
+            </span>
           </div>
-          <div className="py-2.5 flex items-center justify-between">
-            <span className="text-slate-500 flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-slate-400" /> Department
+
+          <div className="py-3 flex items-center justify-between">
+            <span className="text-[#4A5B53] flex items-center gap-2">
+              <Building className="w-4 h-4 text-[#798C82]" /> Academic Program / Designation
             </span>
-            <span className="font-semibold text-slate-800">{profile?.department}</span>
+            <span className="font-bold text-[#17231E]">{currentUser.academic_program}</span>
           </div>
-          <div className="py-2.5 flex items-center justify-between">
-            <span className="text-slate-500 flex items-center gap-2">
-              <Phone className="w-4 h-4 text-slate-400" /> Contact Phone
+
+          <div className="py-3 flex items-center justify-between">
+            <span className="text-[#4A5B53] flex items-center gap-2">
+              <Phone className="w-4 h-4 text-[#798C82]" /> Contact Phone
             </span>
-            <span className="font-semibold text-slate-800">{profile?.phone || 'Not provided'}</span>
+            <span className="font-bold text-[#17231E]">{currentUser.phone || 'Not provided'}</span>
           </div>
         </CardBody>
       </Card>
@@ -134,3 +172,4 @@ export function ProfilePage() {
   );
 }
 
+export default ProfilePage;

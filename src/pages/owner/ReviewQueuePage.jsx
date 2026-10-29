@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../../lib/supabase';
+import { api } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { QUICK_PICK_REASONS } from '../../lib/constants';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
 import { FormField, Textarea } from '../../components/ui/FormField';
 import { Modal } from '../../components/ui/Modal';
 import {
@@ -13,28 +11,27 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Sparkles,
-  ShieldCheck,
-  AlertCircle,
   User,
   Calendar,
-  Layers,
+  MapPin,
+  AlertCircle,
+  Building,
 } from 'lucide-react';
-import { formatDateTime, formatDate } from '../../lib/utils';
+import { formatDuration } from '../../lib/utils';
 
 export function ReviewQueuePage() {
-  const { profile } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const { showToast } = useNotifications();
   const [requests, setRequests] = useState([]);
-  const [resources, setResources] = useState([]);
-  const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Decision Modal State
   const [activeBooking, setActiveBooking] = useState(null);
-  const [decisionAction, setDecisionAction] = useState('approved'); // approved | rejected | waitlisted
+  const [decisionAction, setDecisionAction] = useState('approve'); // approve | reject
   const [decisionReason, setDecisionReason] = useState('');
+  const [adminNotes, setAdminNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [modalError, setModalError] = useState('');
 
   useEffect(() => {
     loadData();
@@ -42,187 +39,191 @@ export function ReviewQueuePage() {
 
   async function loadData() {
     setLoading(true);
-    const [bList, rList, pList] = await Promise.all([
-      api.getBookings(),
-      api.getResources(),
-      api.getProfiles(),
-    ]);
-
-    // Filter to pending review bookings for resources managed or owned by current user (or admin)
-    const pending = bList.filter((b) => b.status === 'pending_review' || b.status === 'requested');
-    setRequests(pending);
-    setResources(rList);
-    setProfiles(pList);
-    setLoading(false);
+    try {
+      const data = await api.getBookings({ all: true, status: 'pending' });
+      setRequests(data || []);
+    } catch (err) {
+      console.error('Failed to load pending queue:', err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function openDecisionModal(booking, action) {
     setActiveBooking(booking);
     setDecisionAction(action);
-    const defaultTemplates = QUICK_PICK_REASONS[action === 'approved' ? 'approve' : action === 'rejected' ? 'reject' : 'waitlist'];
-    setDecisionReason(defaultTemplates[0] || '');
+    setModalError('');
+    if (action === 'approve') {
+      setDecisionReason('');
+      setAdminNotes('Approved: Schedule verified without conflicts.');
+    } else {
+      setDecisionReason('Schedule conflict or institutional priority requirement.');
+      setAdminNotes('');
+    }
   }
 
   async function handleConfirmDecision(e) {
     e.preventDefault();
-    if (!decisionReason.trim()) {
-      showToast('A plain-language decision reason is strictly required.', 'error');
+    setModalError('');
+
+    if (decisionAction === 'reject' && !decisionReason.trim()) {
+      setModalError('A rejection reason is strictly required to inform the requester.');
       return;
     }
 
     setSubmitting(true);
     try {
-      await api.transitionBooking(activeBooking.id, decisionAction, decisionReason.trim(), profile.id);
+      await api.reviewBooking(activeBooking.id, {
+        action: decisionAction,
+        reason: decisionReason ? decisionReason.trim() : null,
+        notes: adminNotes ? adminNotes.trim() : null,
+      });
+
       setSubmitting(false);
       setActiveBooking(null);
-      showToast(`Booking successfully marked as ${decisionAction}!`, 'success');
+      showToast(
+        decisionAction === 'approve'
+          ? 'Reservation approved and confirmed!'
+          : 'Reservation rejected.',
+        decisionAction === 'approve' ? 'success' : 'info'
+      );
       loadData();
     } catch (err) {
       setSubmitting(false);
-      showToast(err.message || 'Error processing state transition', 'error');
+      setModalError(err.message || 'Error processing review decision');
+      showToast(err.message || 'Error updating booking', 'error');
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Request Review Queue</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Review incoming reservation requests, evaluate verified prerequisites, and confirm slots with auditable reasons.
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#faf6ec] text-[#9e7330] border border-[#D6AD63]/30 text-xs font-semibold mb-2">
+            <Inbox className="w-3.5 h-3.5 text-[#D87E3A]" />
+            <span>Administrative Review Queue &middot; {requests.length} Pending</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#17231E] tracking-tight">
+            Reservation Requests Queue
+          </h1>
+          <p className="text-xs sm:text-sm text-[#4A5B53] mt-1">
+            Review incoming room and equipment requests. The server validates availability and prevents double booking before approving.
           </p>
         </div>
-        <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800">
-          {requests.length} Pending Review
-        </span>
       </div>
 
       {loading ? (
-        <div className="p-12 text-center text-xs text-slate-400">Loading pending requests...</div>
+        <div className="p-16 text-center text-xs font-semibold text-[#798C82]">
+          <div className="w-8 h-8 rounded-full border-2 border-[#126B4F] border-t-transparent animate-spin mx-auto mb-3" />
+          <span>Fetching pending requests from database...</span>
+        </div>
       ) : requests.length === 0 ? (
-        <Card>
-          <CardBody className="py-16 text-center">
-            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
-              <Inbox className="w-6 h-6" />
-            </div>
-            <h3 className="text-base font-bold text-slate-800">Review Queue Cleared</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              There are currently no equipment reservations awaiting review. Incoming student and researcher requests will appear here.
-            </p>
-          </CardBody>
+        <Card className="border-[#E5DDD0] p-12 text-center space-y-3 bg-white">
+          <div className="w-12 h-12 rounded-full bg-[#f0f7f4] text-[#126B4F] flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-bold text-[#17231E]">Review Queue is Clear</h3>
+          <p className="text-xs text-[#4A5B53] max-w-sm mx-auto">
+            There are currently no pending reservation requests awaiting administrative approval.
+          </p>
         </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {requests.map((booking) => {
-            const res = resources.find((r) => r.id === booking.resource_id);
-            const user = profiles.find((p) => p.id === booking.user_id);
-
-            // Suggested rule-based decision
-            const hasMissingReqs =
-              booking.eligibility_snapshot &&
-              booking.eligibility_snapshot.some((item) => !item.passed);
-            const suggestedAction = hasMissingReqs ? 'Reject' : 'Approve';
-            const suggestedReason = hasMissingReqs
-              ? 'Prerequisites missing. Recommend rejection or waitlist.'
-              : 'All prerequisite credentials verified and student in good standing.';
+            const start = new Date(booking.start_time);
+            const end = new Date(booking.end_time);
 
             return (
-              <Card key={booking.id} className="border-l-4 border-l-amber-500">
-                <CardBody className="p-6 space-y-5">
-                  {/* Top Row: Resource and Requester info */}
+              <Card key={booking.id} className="border-[#E5DDD0] overflow-hidden">
+                <CardBody className="p-5 space-y-4">
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">
-                          {res?.category || 'Instrument'}
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#faf6ec] text-[#9e7330] border border-[#D6AD63]/40">
+                          Pending Review
                         </span>
-                        <Badge variant="warning" size="sm">
-                          Pending Decision
-                        </Badge>
+                        <span className="text-xs font-bold text-[#103C2D]">
+                          {booking.resource_type || 'Facility'}
+                        </span>
                       </div>
 
-                      <h3 className="text-base font-bold text-slate-900">{res?.name}</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">{res?.location}</p>
+                      <h3 className="text-lg font-bold text-[#17231E] leading-snug">
+                        {booking.resource_name}
+                      </h3>
+
+                      <div className="flex items-center gap-1.5 text-xs text-[#798C82]">
+                        <MapPin className="w-3.5 h-3.5 text-[#D87E3A] shrink-0" />
+                        <span>{booking.resource_location}</span>
+                      </div>
                     </div>
 
-                    {/* Requester Identity Card */}
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-700 min-w-[240px]">
-                      <div className="flex items-center space-x-2">
-                        <User className="w-4 h-4 text-slate-500" />
-                        <span className="font-bold text-slate-900">{user?.full_name}</span>
-                        {user?.is_verified && (
-                          <Badge variant="success" size="sm">
-                            Verified
-                          </Badge>
-                        )}
+                    {/* Requester Information */}
+                    <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E8E2D2] text-xs space-y-1 shrink-0 md:min-w-[240px]">
+                      <div className="flex items-center gap-1.5 font-bold text-[#17231E]">
+                        <User className="w-3.5 h-3.5 text-[#103C2D]" />
+                        <span>{booking.user_name || 'Requester'}</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-1">
-                        {user?.email} · {user?.department}
-                      </p>
-                      <p className="text-[11px] text-slate-400">{user?.year_or_designation}</p>
+                      <p className="text-[#4A5B53]">{booking.user_email}</p>
+                      <span className="inline-block text-[10px] font-semibold text-[#126B4F]">
+                        {booking.department_name || 'Academic Dept'} &middot; {booking.user_program || 'Student'}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Reservation Details & Stated Purpose */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80 text-xs">
-                    <div>
-                      <span className="text-slate-400 block font-medium">Slot Time:</span>
-                      <span className="font-bold text-slate-800">
-                        {formatDateTime(booking.start_at)} &rarr; {formatDateTime(booking.end_at)}
+                  {/* Schedule & Purpose Details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-[#FAF9F5] p-3.5 rounded-xl border border-[#E8E2D2]">
+                    <div className="space-y-1">
+                      <span className="text-[#798C82] font-semibold flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-[#103C2D]" />
+                        <span>Requested Time Window:</span>
                       </span>
+                      <p className="font-bold text-[#17231E]">
+                        {start.toLocaleDateString(undefined, {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                        })}{' '}
+                        ({start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} –{' '}
+                        {end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                      </p>
+                      <p className="text-[11px] text-[#4A5B53]">
+                        Duration: {formatDuration(booking.duration_minutes)}
+                      </p>
                     </div>
 
-                    <div className="sm:col-span-2">
-                      <span className="text-slate-400 block font-medium">Declared Purpose:</span>
-                      <p className="font-semibold text-slate-800 italic">"{booking.purpose}"</p>
-                      {booking.project_need && (
-                        <span className="text-[11px] text-purple-700 block mt-0.5">
-                          Academic Milestone: <strong>{booking.project_need}</strong> (+10 pts)
-                        </span>
+                    <div className="space-y-1">
+                      <span className="text-[#798C82] font-semibold">Purpose &amp; Project:</span>
+                      <p className="font-medium text-[#17231E] leading-relaxed">
+                        {booking.purpose}
+                      </p>
+                      {booking.project_title && (
+                        <p className="text-[11px] text-[#126B4F] font-semibold">
+                          Project: {booking.project_title}
+                        </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Rule-Based Suggested Decision (Section 8) */}
-                  <div className="p-3 rounded-lg bg-blue-50/80 border border-blue-200 text-xs flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Sparkles className="w-4 h-4 text-brand-600 shrink-0" />
-                      <div>
-                        <span className="font-bold text-brand-900">Rule-Based Suggestion: </span>
-                        <span className="text-brand-800 font-semibold">{suggestedAction}</span>
-                        <span className="text-slate-500 text-[11px] ml-2">— {suggestedReason}</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] text-slate-400 italic">Human Manager Decides</span>
-                  </div>
-
-                  {/* Action Buttons: Approve / Reject / Waitlist */}
-                  <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-end gap-2.5">
+                  {/* Decision Actions */}
+                  <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#E8E2D2]">
                     <Button
                       size="sm"
-                      variant="outline"
-                      onClick={() => openDecisionModal(booking, 'waitlisted')}
-                    >
-                      <Clock className="w-3.5 h-3.5 mr-1" />
-                      <span>Waitlist</span>
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={() => openDecisionModal(booking, 'rejected')}
+                      variant="secondary"
+                      onClick={() => openDecisionModal(booking, 'reject')}
+                      className="text-xs font-bold text-[#c2413a] hover:bg-[#fdf2f1] border-[#c2413a]/30"
                     >
                       <XCircle className="w-3.5 h-3.5 mr-1" />
-                      <span>Reject</span>
+                      Reject Request
                     </Button>
 
                     <Button
                       size="sm"
-                      variant="success"
-                      onClick={() => openDecisionModal(booking, 'approved')}
+                      variant="primary"
+                      onClick={() => openDecisionModal(booking, 'approve')}
+                      className="text-xs font-bold bg-[#103C2D] hover:bg-[#185340] text-white"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                      <span>Approve Request</span>
+                      Approve &amp; Confirm Slot
                     </Button>
                   </div>
                 </CardBody>
@@ -232,65 +233,84 @@ export function ReviewQueuePage() {
         </div>
       )}
 
-      {/* Decision Reason Confirmation Modal (Section 5 & 8) */}
-      <Modal
-        isOpen={Boolean(activeBooking)}
-        onClose={() => setActiveBooking(null)}
-        title={`Confirm Decision: ${decisionAction.toUpperCase()}`}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setActiveBooking(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant={decisionAction === 'approved' ? 'success' : decisionAction === 'rejected' ? 'danger' : 'primary'}
-              onClick={handleConfirmDecision}
-              loading={submitting}
-            >
-              Confirm {decisionAction}
-            </Button>
-          </>
-        }
-      >
-        <form onSubmit={handleConfirmDecision} className="space-y-4 text-left">
-          <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs">
-            <strong>Mandatory Governance Requirement:</strong> A plain-language reason is strictly required.
-            This will be displayed in the borrower's <em>"Why this decision?"</em> explainability box and permanently logged in the append-only audit trail.
-          </div>
+      {/* Decision Confirmation Modal */}
+      {activeBooking && (
+        <Modal
+          isOpen={Boolean(activeBooking)}
+          onClose={() => setActiveBooking(null)}
+          title={
+            decisionAction === 'approve'
+              ? 'Confirm Booking Approval'
+              : 'Reject Reservation Request'
+          }
+        >
+          <form onSubmit={handleConfirmDecision} className="space-y-4 text-left">
+            {modalError && (
+              <div className="p-3.5 rounded-xl bg-[#fdf2f1] border border-[#c2413a]/30 text-[#c2413a] text-xs font-semibold flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{modalError}</span>
+              </div>
+            )}
 
-          {/* Quick-Pick Templates */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Quick-Pick Pre-Approved Templates:
-            </label>
-            <div className="space-y-1.5">
-              {(QUICK_PICK_REASONS[decisionAction === 'approved' ? 'approve' : decisionAction === 'rejected' ? 'reject' : 'waitlist'] || []).map(
-                (template, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setDecisionReason(template)}
-                    className="w-full text-left p-2 rounded text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-slate-700 leading-tight"
-                  >
-                    "{template}"
-                  </button>
-                )
-              )}
+            <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E8E2D2] text-xs space-y-1">
+              <span className="text-[#798C82] font-semibold">Resource &amp; Requester:</span>
+              <p className="font-bold text-[#17231E]">
+                {activeBooking.resource_name} for {activeBooking.user_name}
+              </p>
+              <p className="text-[11px] text-[#4A5B53]">
+                {new Date(activeBooking.start_time).toLocaleString()} –{' '}
+                {new Date(activeBooking.end_time).toLocaleTimeString()}
+              </p>
             </div>
-          </div>
 
-          <FormField label="Official Reason for Borrower" required>
-            <Textarea
-              required
-              rows={3}
-              placeholder="Provide a clear, respectful reason for this allocation decision..."
-              value={decisionReason}
-              onChange={(e) => setDecisionReason(e.target.value)}
-            />
-          </FormField>
-        </form>
-      </Modal>
+            {decisionAction === 'reject' ? (
+              <FormField label="Rejection Reason" required>
+                <Textarea
+                  required
+                  placeholder="Explain the reason for rejection to the requester..."
+                  rows={3}
+                  value={decisionReason}
+                  onChange={(e) => setDecisionReason(e.target.value)}
+                  className="text-xs"
+                />
+              </FormField>
+            ) : (
+              <FormField label="Administrative Approval Notes (Optional)">
+                <Textarea
+                  placeholder="Optional notes or instructions for the borrower..."
+                  rows={2}
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  className="text-xs"
+                />
+              </FormField>
+            )}
+
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E8E2D2]">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveBooking(null)}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                type="submit"
+                variant={decisionAction === 'approve' ? 'primary' : 'danger'}
+                size="sm"
+                className="font-bold text-xs"
+                loading={submitting}
+              >
+                {decisionAction === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
 
+export default ReviewQueuePage;

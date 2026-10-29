@@ -1,131 +1,209 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { FormField, Input, Select } from '../components/ui/FormField';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
-import { ShieldAlert, UserPlus, Info } from 'lucide-react';
+import { UserPlus, Lock, Mail, User, Building, BookOpen, AlertCircle } from 'lucide-react';
 
 export function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('user');
-  const [organization, setOrganization] = useState('Apex Institute of Technology');
-  const [department, setDepartment] = useState('ECE');
-  const [yearOrDesignation, setYearOrDesignation] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [departmentId, setDepartmentId] = useState('');
+  const [academicProgram, setAcademicProgram] = useState('Undergraduate');
   const [phone, setPhone] = useState('');
+  const [departments, setDepartments] = useState([]);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    loadDepartments();
+  }, []);
+
+  async function loadDepartments() {
+    try {
+      const list = await api.getDepartments();
+      setDepartments(list || []);
+      if (list && list.length > 0) {
+        setDepartmentId(list[0].id);
+      }
+    } catch (e) {
+      console.error('Failed to load departments:', e);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
+    setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     setLoading(true);
-    await register({
-      fullName,
-      email,
-      role,
-      organization,
-      department,
-      yearOrDesignation: yearOrDesignation || (role === 'owner' ? 'Lab In-Charge' : 'Student'),
-      phone,
-    });
-    setLoading(false);
-    navigate('/profile');
+
+    try {
+      const res = await register({
+        fullName,
+        email,
+        password,
+        departmentId,
+        academicProgram,
+        phone,
+      });
+
+      if (res.success) {
+        navigate('/campuses');
+      } else {
+        setError(res.error || 'Registration failed');
+      }
+    } catch (err) {
+      setError(err.message || 'An error occurred during registration');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="max-w-xl mx-auto py-8">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <UserPlus className="w-5 h-5 text-brand-600" />
-            <h3 className="text-base font-bold text-slate-900">Create an UnlockLab Account</h3>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Join the departmental equipment network to borrow or share idle instruments.
-          </p>
-        </CardHeader>
+    <div className="max-w-xl mx-auto py-10 px-4 space-y-6">
+      <div className="text-center space-y-2">
+        <div className="w-12 h-12 rounded-2xl bg-[#103C2D] text-[#F3A66B] flex items-center justify-center mx-auto shadow-sm">
+          <UserPlus className="w-6 h-6" />
+        </div>
+        <h1 className="text-2xl font-bold font-serif text-[#17231E]">Create Your Account</h1>
+        <p className="text-xs text-[#4A5B53] max-w-sm mx-auto">
+          Join the branch-neutral campus resource sharing network. Reserve rooms, laboratories, and specialized instrumentation.
+        </p>
+      </div>
 
-        <CardBody>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-start space-x-2">
-              <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-              <span>
-                <strong>Owner Policy Notice:</strong> To ensure laboratory security, users registering as <strong>Lab Owners</strong> must have their institutional credentials verified by a department administrator before published equipment becomes public.
-              </span>
-            </div>
+      <Card className="border-[#E5DDD0] shadow-sm">
+        <CardBody className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-4 text-left">
+            {error && (
+              <div className="p-3.5 rounded-xl bg-[#fdf2f1] border border-[#c2413a]/30 text-[#c2413a] text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
 
             <FormField label="Full Name" required>
-              <Input
-                required
-                placeholder="e.g. Dr. Ramesh Gupta"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
+              <div className="relative">
+                <User className="w-4 h-4 text-[#798C82] absolute left-3.5 top-3" />
+                <Input
+                  required
+                  placeholder="e.g. Elena Rostova"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="pl-10 text-xs"
+                />
+              </div>
             </FormField>
 
             <FormField label="Institutional Email" required>
-              <Input
-                type="email"
-                required
-                placeholder="e.g. ramesh.gupta@apex.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <div className="relative">
+                <Mail className="w-4 h-4 text-[#798C82] absolute left-3.5 top-3" />
+                <Input
+                  type="email"
+                  required
+                  placeholder="e.g. elena@institution.edu"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 text-xs"
+                />
+              </div>
             </FormField>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label="Account Role" required>
-                <Select value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="user">Student / Borrower</option>
-                  <option value="owner">Lab / Equipment Owner</option>
-                </Select>
+              <FormField label="Password" required>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-[#798C82] absolute left-3.5 top-3" />
+                  <Input
+                    type="password"
+                    required
+                    placeholder="Min 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 text-xs"
+                  />
+                </div>
               </FormField>
 
-              <FormField label="Department" required>
-                <Input
-                  required
-                  placeholder="e.g. ECE, Robotics, Physics"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                />
+              <FormField label="Confirm Password" required>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-[#798C82] absolute left-3.5 top-3" />
+                  <Input
+                    type="password"
+                    required
+                    placeholder="Repeat password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 text-xs"
+                  />
+                </div>
               </FormField>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label="Affiliated Institution" required>
-                <Input
-                  required
-                  value={organization}
-                  onChange={(e) => setOrganization(e.target.value)}
-                />
+              <FormField label="Academic Department" required>
+                <Select
+                  value={departmentId}
+                  onChange={(e) => setDepartmentId(e.target.value)}
+                  className="text-xs"
+                >
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} ({d.code})
+                    </option>
+                  ))}
+                </Select>
               </FormField>
 
-              <FormField label="Designation / Academic Year">
-                <Input
-                  placeholder="e.g. 4th Year B.Tech or Associate Prof"
-                  value={yearOrDesignation}
-                  onChange={(e) => setYearOrDesignation(e.target.value)}
-                />
+              <FormField label="Academic Program / Role" required>
+                <Select
+                  value={academicProgram}
+                  onChange={(e) => setAcademicProgram(e.target.value)}
+                  className="text-xs"
+                >
+                  <option value="Undergraduate">Undergraduate Student</option>
+                  <option value="Postgraduate">Postgraduate Student (M.Tech / M.Sc)</option>
+                  <option value="PhD Scholar">PhD Research Scholar</option>
+                  <option value="Research Fellow">Postdoctoral / Research Fellow</option>
+                  <option value="Faculty">Faculty / Lab Director</option>
+                </Select>
               </FormField>
             </div>
 
             <FormField label="Contact Phone (Optional)">
               <Input
-                placeholder="+91 98765 43210"
+                placeholder="+1 (555) 019-2834"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                className="text-xs"
               />
             </FormField>
 
-            <Button type="submit" className="w-full mt-2" loading={loading}>
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full font-bold bg-[#103C2D] hover:bg-[#185340] text-white py-2.5 rounded-xl mt-2"
+              loading={loading}
+            >
               Complete Registration
             </Button>
 
-            <div className="text-center pt-2 text-xs text-slate-500">
-              Already have an account?{' '}
-              <Link to="/login" className="text-brand-600 font-semibold hover:underline">
+            <div className="text-center pt-3 border-t border-[#E8E2D2] text-xs text-[#4A5B53]">
+              Already registered?{' '}
+              <Link to="/login" className="text-[#103C2D] font-bold hover:underline">
                 Sign in here
               </Link>
             </div>
@@ -136,3 +214,4 @@ export function RegisterPage() {
   );
 }
 
+export default RegisterPage;

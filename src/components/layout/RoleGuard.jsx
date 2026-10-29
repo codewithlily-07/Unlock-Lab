@@ -35,8 +35,8 @@ export function RoleGuard({ children, allowedRoles = [] }) {
           This area requires <strong className="text-slate-800">{allowedRoles.join(' or ')}</strong> privileges.
           Your current active role is <strong className="text-brand-600 uppercase">{role}</strong>.
         </p>
-        <p className="text-[11px] text-slate-400 mb-6 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-          Tip for Judges: Use the <strong>Demo Persona</strong> dropdown in the top navigation bar to switch to an authorized role.
+        <p className="text-[11px] text-[#4A5B53] mb-6 bg-[#FAF9F5] p-2.5 rounded-lg border border-[#E8E2D2]">
+          If you are an authorized administrator, please sign in with your administrative account credentials.
         </p>
         <Button variant="secondary" onClick={() => window.history.back()}>
           Return to Previous Screen

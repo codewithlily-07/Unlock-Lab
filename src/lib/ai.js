@@ -65,3 +65,4 @@ export function matchSuggestedResources(queryText, allResources) {
     return keywords.some((kw) => text.includes(kw));
   });
 }
+

@@ -6,8 +6,8 @@ export function Card({ children, className = '', hover = false, onClick }) {
     <div
       onClick={onClick}
       className={cn(
-        'bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all',
-        hover && 'hover:shadow-md hover:border-slate-300 cursor-pointer',
+        'bg-[#FFFFFF] rounded-2xl border border-[#E8E2D2] shadow-soft-sm overflow-hidden transition-all duration-300',
+        hover && 'hover:shadow-soft-lg hover:border-[#D6AD63]/50 hover:-translate-y-1 cursor-pointer',
         className
       )}
     >
@@ -17,7 +17,7 @@ export function Card({ children, className = '', hover = false, onClick }) {
 }
 
 export function CardHeader({ children, className = '' }) {
-  return <div className={cn('px-6 py-5 border-b border-slate-100', className)}>{children}</div>;
+  return <div className={cn('px-6 py-5 border-b border-[#F0ECE0]', className)}>{children}</div>;
 }
 
 export function CardBody({ children, className = '' }) {
@@ -26,9 +26,10 @@ export function CardBody({ children, className = '' }) {
 
 export function CardFooter({ children, className = '' }) {
   return (
-    <div className={cn('px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between', className)}>
+    <div className={cn('px-6 py-4 bg-[#FFFCF5] border-t border-[#F0ECE0] flex items-center justify-between', className)}>
       {children}
     </div>
   );
 }
 
+export default Card;

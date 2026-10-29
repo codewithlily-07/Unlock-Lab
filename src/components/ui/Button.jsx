@@ -13,27 +13,29 @@ export function Button({
   ...props
 }) {
   const base =
-    'inline-flex items-center justify-center font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none';
+    'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#126B4F] disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
 
   const variants = {
     primary:
-      'bg-brand-600 hover:bg-brand-700 text-white shadow-sm focus:ring-brand-500 border border-transparent',
+      'bg-[#073D2D] hover:bg-[#126B4F] text-[#FFFCF5] shadow-md shadow-[#073D2D]/15 border border-[#126B4F]/40 btn-shimmer',
     secondary:
-      'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-sm focus:ring-brand-500',
+      'bg-[#FFFCF5] hover:bg-[#F7F1E5] text-[#17231E] border border-[#E8E2D2] shadow-soft-sm hover:border-[#D6AD63]/50',
+    gold:
+      'bg-[#D6AD63] hover:bg-[#be9042] text-[#073D2D] font-bold shadow-md shadow-[#D6AD63]/20 border border-[#D6AD63] btn-shimmer',
     outline:
-      'bg-transparent hover:bg-slate-100 text-slate-700 border border-slate-300 focus:ring-slate-400',
+      'bg-transparent hover:bg-[#073D2D]/5 text-[#073D2D] border border-[#073D2D]/30',
     danger:
-      'bg-rose-600 hover:bg-rose-700 text-white shadow-sm focus:ring-rose-500 border border-transparent',
+      'bg-[#c2413a] hover:bg-[#a5332d] text-white shadow-soft-sm border border-transparent',
     success:
-      'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm focus:ring-emerald-500 border border-transparent',
+      'bg-[#126B4F] hover:bg-[#0d5740] text-white shadow-soft-sm border border-transparent',
     ghost:
-      'bg-transparent hover:bg-slate-100 text-slate-600 border border-transparent focus:ring-slate-300',
+      'bg-transparent hover:bg-[#F7F1E5] text-[#17231E] border border-transparent',
   };
 
   const sizes = {
-    sm: 'text-xs px-2.5 py-1.5 gap-1.5',
-    md: 'text-sm px-4 py-2 gap-2',
-    lg: 'text-base px-5 py-2.5 gap-2.5',
+    sm: 'text-xs px-3 py-1.5 gap-1.5',
+    md: 'text-sm px-4 py-2.5 gap-2',
+    lg: 'text-base px-6 py-3 gap-2.5',
   };
 
   return (
@@ -71,3 +73,4 @@ export function Button({
   );
 }
 
+export default Button;

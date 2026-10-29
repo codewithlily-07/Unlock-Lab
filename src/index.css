@@ -5,10 +5,204 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    color: #22251F;
+    background-color: #F7F1E7;
+  }
   body {
-    color: var(--text-main);
-    background-color: #f8fafc;
+    color: #22251F;
+    background-color: #F7F1E7;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    color: #22251F;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Glassmorphism & Surface Utilities */
+.glass-cream {
+  background: rgba(255, 252, 245, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(232, 226, 210, 0.85);
+}
+
+.glass-forest {
+  background: rgba(7, 61, 45, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(214, 173, 99, 0.25);
+}
+
+.glass-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(232, 226, 210, 0.95);
+  box-shadow: 0 4px 16px rgba(7, 61, 45, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(18, 107, 79, 0.35);
+  box-shadow: 0 14px 32px rgba(7, 61, 45, 0.08), 0 0 0 1px rgba(18, 107, 79, 0.1);
+  transform: translateY(-2px);
+}
+
+/* 3D Perspective & Resource Blocks */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-1200 {
+  perspective: 1200px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* Shimmer Button Effect */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.28),
+    transparent
+  );
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-shimmer:hover::before {
+  transform: translateX(200%);
+}
+
+/* Glowing Accent Utilities */
+.glow-gold {
+  box-shadow: 0 8px 24px rgba(214, 173, 99, 0.28);
+}
+
+.glow-emerald {
+  box-shadow: 0 8px 24px rgba(18, 107, 79, 0.24);
+}
+
+.glow-orange {
+  box-shadow: 0 8px 24px rgba(222, 115, 71, 0.28);
+}
+
+/* Editorial display font utility */
+.font-editorial {
+  font-family: 'Playfair Display', 'DM Serif Display', Georgia, serif;
+}
+
+/* Object Landing & Laboratory Animations */
+@keyframes objectDrop {
+  0% {
+    transform: translateY(-90px) scale(0.75);
+    opacity: 0;
+  }
+  65% {
+    transform: translateY(6px) scale(1.03);
+    opacity: 1;
+  }
+  85% {
+    transform: translateY(-3px) scale(0.99);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-object-drop {
+  animation: objectDrop 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes waveOscillate {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -120;
+  }
+}
+
+.animate-waveform {
+  stroke-dasharray: 8 4;
+  animation: waveOscillate 4s linear infinite;
+}
+
+@keyframes beaconPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.3;
+  }
+}
+
+.animate-beacon {
+  animation: beaconPulse 2s ease-in-out infinite;
+}
+
+/* Scroll reveal helper classes */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-item.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F1E5;
+}
+::-webkit-scrollbar-thumb {
+  background: #D6C4A4;
+  border-radius: 9999px;
+  border: 2px solid #F7F1E5;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #126B4F;
+}
+
+/* Reduced Motion Mode */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001s !important;
+    transition-delay: 0s !important;
+  }
+  .preserve-3d {
+    transform: none !important;
   }
 }
 
@@ -33,4 +227,3 @@
     display: none !important;
   }
 }
-

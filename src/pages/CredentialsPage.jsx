@@ -27,7 +27,7 @@ export function CredentialsPage() {
     if (!profile?.id) return;
     setLoading(true);
     const data = await api.getCredentials(profile.id);
-    setCredentials(data);
+    setCredentials(data || []);
     setLoading(false);
   }
 
@@ -48,42 +48,51 @@ export function CredentialsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">My Lab Safety Credentials</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#17231E] tracking-tight font-sans">
+            My Lab Safety Credentials
+          </h1>
+          <p className="text-xs sm:text-sm text-[#4A5B53] mt-1">
             Verified training certifications enable automatic instant booking for sensitive ECE instruments.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
+        <Button onClick={() => setIsModalOpen(true)} variant="primary" className="font-bold">
           <Upload className="w-4 h-4 mr-1.5" />
           <span>Upload Certificate / ID</span>
         </Button>
       </div>
 
-      {/* Privacy Notice (Section 11H) */}
-      <div className="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-600 flex items-start space-x-3">
-        <Shield className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
+      {/* Privacy Notice */}
+      <div className="p-4 rounded-2xl bg-[#FFFCF5] border border-[#E8E2D2] text-xs text-[#4A5B53] flex items-start space-x-3 shadow-soft-sm">
+        <Shield className="w-5 h-5 text-[#126B4F] shrink-0 mt-0.5" />
         <div className="leading-relaxed">
-          <strong className="text-slate-800">Privacy &amp; Data Security Notice:</strong> UnlockLab adheres to strict data minimization.
-          Submitted certificates and ID documents are encrypted in private storage buckets, never published publicly,
-          and reviewed solely by authorized departmental lab technicians to confirm safety qualifications.
+          <strong className="text-[#17231E]">Privacy &amp; Institutional Governance:</strong> UnlockLab adheres to strict data minimization.
+          Submitted certificates and ID credentials are encrypted in institutional storage buckets, never published publicly,
+          and reviewed solely by authorized departmental laboratory technicians to confirm prerequisite qualifications.
         </div>
       </div>
 
       {/* Credentials List */}
       <div className="grid grid-cols-1 gap-4">
         {loading ? (
-          <div className="p-8 text-center text-xs text-slate-400">Loading credentials...</div>
+          <div className="p-16 text-center text-xs font-semibold text-[#798C82]">
+            <div className="w-8 h-8 rounded-full border-2 border-[#126B4F] border-t-transparent animate-spin mx-auto mb-3" />
+            <span>Loading credentials...</span>
+          </div>
         ) : credentials.length === 0 ? (
           <Card>
-            <CardBody className="text-center py-12">
-              <FileCheck className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-              <h3 className="text-sm font-semibold text-slate-700">No Credentials on Record</h3>
-              <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto mb-4">
+            <CardBody className="text-center py-16 space-y-3">
+              <div className="w-12 h-12 rounded-full bg-[#f0f7f4] text-[#126B4F] flex items-center justify-center mx-auto">
+                <FileCheck className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-[#17231E]">No Credentials on Record</h3>
+              <p className="text-xs text-[#4A5B53] max-w-sm mx-auto">
                 Upload your laboratory safety certifications to qualify for high-speed oscilloscopes, spectrum analyzers, and soldering benches.
               </p>
-              <Button size="sm" onClick={() => setIsModalOpen(true)}>
-                Upload Certification
-              </Button>
+              <div className="pt-2">
+                <Button size="sm" variant="gold" onClick={() => setIsModalOpen(true)} className="font-bold">
+                  Upload Certification
+                </Button>
+              </div>
             </CardBody>
           </Card>
         ) : (
@@ -96,12 +105,12 @@ export function CredentialsPage() {
                 <CardBody className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-start space-x-3.5">
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${
                         isVerified
-                          ? 'bg-emerald-100 text-emerald-700'
+                          ? 'bg-[#ebf6f1] text-[#126B4F] border-[#126B4F]/30'
                           : isPending
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-rose-100 text-rose-700'
+                          ? 'bg-[#faf6ec] text-[#9e7330] border-[#D6AD63]/40'
+                          : 'bg-[#fdf2f1] text-[#c2413a] border-[#c2413a]/30'
                       }`}
                     >
                       <FileCheck className="w-5 h-5" />
@@ -109,7 +118,7 @@ export function CredentialsPage() {
 
                     <div>
                       <div className="flex items-center space-x-2">
-                        <h4 className="text-sm font-bold text-slate-900">{cred.name}</h4>
+                        <h4 className="text-sm font-bold text-[#17231E]">{cred.name}</h4>
                         <Badge
                           variant={isVerified ? 'success' : isPending ? 'warning' : 'danger'}
                           size="sm"
@@ -118,13 +127,13 @@ export function CredentialsPage() {
                         </Badge>
                       </div>
 
-                      <p className="text-xs text-slate-500 mt-1">
-                        Category: <span className="capitalize font-medium text-slate-700">{cred.type}</span>
+                      <p className="text-xs text-[#4A5B53] mt-1">
+                        Category: <span className="capitalize font-medium text-[#17231E]">{cred.type}</span>
                         {cred.reviewed_at && ` · Verified on ${formatDate(cred.reviewed_at)}`}
                       </p>
 
                       {cred.review_note && (
-                        <p className="text-xs text-slate-600 bg-slate-50 px-2.5 py-1 rounded border border-slate-200 mt-2 inline-block">
+                        <p className="text-xs text-[#126B4F] bg-[#f0f7f4] px-3 py-1 rounded-lg border border-[#126B4F]/25 mt-2 inline-block font-medium">
                           Reviewer note: "{cred.review_note}"
                         </p>
                       )}
@@ -132,7 +141,7 @@ export function CredentialsPage() {
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[11px] text-slate-400 block">File: {cred.file_path}</span>
+                    <span className="text-[11px] text-[#798C82] font-mono block">File: {cred.file_path}</span>
                   </div>
                 </CardBody>
               </Card>
@@ -151,7 +160,9 @@ export function CredentialsPage() {
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpload}>Submit for Verification</Button>
+            <Button onClick={handleUpload} variant="primary" className="font-bold">
+              Submit for Verification
+            </Button>
           </>
         }
       >
@@ -180,10 +191,10 @@ export function CredentialsPage() {
           </FormField>
 
           <FormField label="Certificate File (PDF or Image)" helperText="Mock file will be securely simulated">
-            <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 cursor-pointer transition-colors">
-              <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-              <p className="text-xs text-slate-600 font-medium">Click to select certificate file (PDF, PNG, JPG)</p>
-              <p className="text-[10px] text-slate-400 mt-1">Maximum file size: 5 MB</p>
+            <div className="border-2 border-dashed border-[#D6C4A4] rounded-2xl p-6 text-center hover:border-[#126B4F] cursor-pointer transition-colors bg-[#FFFCF5]">
+              <Upload className="w-8 h-8 text-[#798C82] mx-auto mb-2" />
+              <p className="text-xs text-[#17231E] font-bold">Click to select certificate file (PDF, PNG, JPG)</p>
+              <p className="text-[10px] text-[#798C82] mt-1">Maximum file size: 5 MB</p>
             </div>
           </FormField>
         </form>
@@ -192,3 +203,4 @@ export function CredentialsPage() {
   );
 }
 
+export default CredentialsPage;

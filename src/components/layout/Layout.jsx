@@ -7,7 +7,7 @@ import { ToastContainer } from '../ui/Toast';
 
 export function Layout() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col antialiased">
+    <div className="min-h-screen bg-[#F7F1E5] text-[#17231E] flex flex-col antialiased selection:bg-[#126B4F] selection:text-white">
       <GuidedTour />
       <Navbar />
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">

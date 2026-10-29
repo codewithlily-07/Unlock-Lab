@@ -1,229 +1,246 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { Card, CardHeader, CardBody } from '../components/ui/Card';
-import { StatusBadge } from '../components/ui/StatusBadge';
+import { Card, CardBody } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import {
   Calendar,
   Clock,
-  ArrowRight,
-  CheckCircle,
+  MapPin,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Building,
   RotateCcw,
-  AlertTriangle,
-  History,
-  QrCode,
+  ArrowRight,
 } from 'lucide-react';
-import { formatDateTime, formatDate } from '../lib/utils';
+import { formatDuration } from '../lib/utils';
 
 export function MyBookingsPage() {
-  const { profile } = useAuth();
+  const { currentUser } = useAuth();
   const { showToast } = useNotifications();
   const [bookings, setBookings] = useState([]);
-  const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('active'); // active | pending | waitlisted | past
+  const [activeTab, setActiveTab] = useState('all'); // all | pending | approved | completed | cancelled
 
   useEffect(() => {
-    loadBookings();
-  }, [profile?.id]);
+    if (currentUser) {
+      loadBookings();
+    }
+  }, [currentUser]);
 
   async function loadBookings() {
-    if (!profile?.id) return;
     setLoading(true);
-    const [bList, rList] = await Promise.all([
-      api.getBookings(profile.id),
-      api.getResources(),
-    ]);
-    setBookings(bList);
-    setResources(rList);
-    setLoading(false);
-  }
-
-  async function handleCancel(bookingId) {
-    if (window.confirm('Cancel this booking request? If waitlisted users exist, the slot will be auto-promoted.')) {
-      await api.transitionBooking(bookingId, 'cancelled', 'Cancelled voluntarily by borrower', profile.id);
-      showToast('Booking cancelled and slot released', 'info');
-      loadBookings();
+    try {
+      const data = await api.getBookings();
+      setBookings(data || []);
+    } catch (err) {
+      console.error('Failed to load reservations:', err);
+    } finally {
+      setLoading(false);
     }
   }
 
-  // Filter tabs
+  async function handleCancel(bookingId) {
+    if (window.confirm('Are you sure you want to cancel this reservation request?')) {
+      try {
+        await api.cancelBooking(bookingId, 'Cancelled by user');
+        showToast('Reservation request cancelled', 'info');
+        loadBookings();
+      } catch (err) {
+        showToast(err.message || 'Failed to cancel reservation', 'error');
+      }
+    }
+  }
+
   const filteredBookings = bookings.filter((b) => {
-    if (activeTab === 'active') return ['approved', 'checked_out', 'overdue'].includes(b.status);
-    if (activeTab === 'pending') return ['requested', 'pending_review', 'eligibility_failed'].includes(b.status);
-    if (activeTab === 'waitlisted') return b.status === 'waitlisted';
-    if (activeTab === 'past') return ['closed', 'returned', 'returned_late', 'cancelled', 'rejected', 'disputed', 'no_show'].includes(b.status);
+    if (activeTab === 'all') return true;
+    if (activeTab === 'pending') return b.status === 'pending';
+    if (activeTab === 'approved') return b.status === 'approved';
+    if (activeTab === 'completed') return b.status === 'completed';
+    if (activeTab === 'cancelled') return b.status === 'cancelled' || b.status === 'rejected';
     return true;
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Equipment Reservations</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Track active bench loans, pending reviews, transparent waitlist positions, and return receipts.
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0f7f4] border border-[#126B4F]/20 text-[#073D2D] text-xs font-semibold mb-2">
+            <Calendar className="w-3.5 h-3.5 text-[#126B4F]" />
+            <span>My Institutional Reservations</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#17231E] tracking-tight">
+            My Reservations &amp; Requests
+          </h1>
+          <p className="text-xs sm:text-sm text-[#4A5B53] mt-1">
+            Track your pending room and equipment requests, view approved schedules, or cancel reservations.
           </p>
         </div>
 
-        <Link to="/explore">
-          <Button size="sm">
-            <span>Book Equipment</span>
-            <ArrowRight className="w-3.5 h-3.5 ml-1" />
+        <Link to="/campuses">
+          <Button size="sm" variant="primary" className="bg-[#103C2D] text-white font-bold text-xs">
+            Browse Facilities
           </Button>
         </Link>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200 space-x-6 text-xs font-semibold">
-        <button
-          onClick={() => setActiveTab('active')}
-          className={`pb-3 border-b-2 transition-colors flex items-center gap-1.5 ${
-            activeTab === 'active'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <span>Active Loans</span>
-          <span className="px-1.5 py-0.2 rounded-full bg-slate-100 text-[10px]">
-            {bookings.filter((b) => ['approved', 'checked_out', 'overdue'].includes(b.status)).length}
-          </span>
-        </button>
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white border border-[#E5DDD0] overflow-x-auto scrollbar-none shadow-sm">
+        {[
+          { key: 'all', label: 'All Requests' },
+          { key: 'pending', label: 'Pending Review' },
+          { key: 'approved', label: 'Approved & Scheduled' },
+          { key: 'completed', label: 'Completed' },
+          { key: 'cancelled', label: 'Cancelled / Rejected' },
+        ].map((tab) => {
+          const count =
+            tab.key === 'all'
+              ? bookings.length
+              : tab.key === 'cancelled'
+              ? bookings.filter((b) => b.status === 'cancelled' || b.status === 'rejected').length
+              : bookings.filter((b) => b.status === tab.key).length;
 
-        <button
-          onClick={() => setActiveTab('pending')}
-          className={`pb-3 border-b-2 transition-colors flex items-center gap-1.5 ${
-            activeTab === 'pending'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <span>Pending Review</span>
-          <span className="px-1.5 py-0.2 rounded-full bg-slate-100 text-[10px]">
-            {bookings.filter((b) => ['requested', 'pending_review', 'eligibility_failed'].includes(b.status)).length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('waitlisted')}
-          className={`pb-3 border-b-2 transition-colors flex items-center gap-1.5 ${
-            activeTab === 'waitlisted'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <span>Waitlist</span>
-          <span className="px-1.5 py-0.2 rounded-full bg-slate-100 text-[10px]">
-            {bookings.filter((b) => b.status === 'waitlisted').length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('past')}
-          className={`pb-3 border-b-2 transition-colors flex items-center gap-1.5 ${
-            activeTab === 'past'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <span>History &amp; Closed</span>
-          <span className="px-1.5 py-0.2 rounded-full bg-slate-100 text-[10px]">
-            {bookings.filter((b) => ['closed', 'returned', 'returned_late', 'cancelled', 'rejected', 'disputed', 'no_show'].includes(b.status)).length}
-          </span>
-        </button>
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === tab.key
+                  ? 'bg-[#103C2D] text-white shadow-sm'
+                  : 'text-[#4A5043] hover:bg-[#F7F1E7]'
+              }`}
+            >
+              {tab.label} ({count})
+            </button>
+          );
+        })}
       </div>
 
       {/* Bookings List */}
       {loading ? (
-        <div className="p-12 text-center text-xs text-slate-400">Loading your reservations...</div>
+        <div className="p-16 text-center text-xs font-semibold text-[#798C82]">
+          <div className="w-8 h-8 rounded-full border-2 border-[#126B4F] border-t-transparent animate-spin mx-auto mb-3" />
+          <span>Loading your reservations...</span>
+        </div>
       ) : filteredBookings.length === 0 ? (
-        <Card>
-          <CardBody className="py-14 text-center">
-            <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-            <h3 className="text-sm font-semibold text-slate-700">No Reservations in this Category</h3>
-            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto mb-4">
-              Explore available oscilloscopes, 3D printers, and testing bays to schedule bench time.
-            </p>
-            <Link to="/explore">
-              <Button size="sm">Explore Equipment</Button>
+        <Card className="border-[#E5DDD0] p-12 text-center space-y-3 bg-white">
+          <div className="w-12 h-12 rounded-full bg-[#E8EFE6] text-[#103C2D] flex items-center justify-center mx-auto">
+            <Calendar className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-bold text-[#17231E]">No Reservations Found</h3>
+          <p className="text-xs text-[#4A5B53] max-w-sm mx-auto">
+            You do not have any reservations in this category. All records reflect authentic database transactions.
+          </p>
+          <div className="pt-2">
+            <Link to="/campuses">
+              <Button size="sm" variant="primary" className="bg-[#103C2D] text-white font-bold text-xs">
+                Browse Campus Facilities
+              </Button>
             </Link>
-          </CardBody>
+          </div>
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredBookings.map((booking) => {
-            const res = resources.find((r) => r.id === booking.resource_id);
+          {filteredBookings.map((b) => {
+            const start = new Date(b.start_time);
+            const end = new Date(b.end_time);
+            const isPending = b.status === 'pending';
+            const isApproved = b.status === 'approved';
+            const isRejected = b.status === 'rejected';
+            const isCancelled = b.status === 'cancelled';
 
             return (
-              <Card key={booking.id} hover>
-                <CardBody className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <Card key={b.id} hover className="border-[#E5DDD0] overflow-hidden">
+                <CardBody className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-5">
                   <div className="space-y-2 flex-1">
-                    <div className="flex items-center space-x-2">
-                      <StatusBadge status={booking.status} />
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                        {res?.category}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-[#103C2D] uppercase tracking-wider">
+                        {b.resource_type || 'Facility'}
+                      </span>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          isApproved
+                            ? 'bg-[#126B4F] text-white'
+                            : isPending
+                            ? 'bg-[#faf6ec] text-[#9e7330] border border-[#D6AD63]/40'
+                            : isRejected
+                            ? 'bg-[#fdf2f1] text-[#c2413a] border border-[#c2413a]/30'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {b.status}
                       </span>
                     </div>
 
-                    <h3 className="font-bold text-sm text-slate-900">{res?.name}</h3>
+                    <h3 className="text-base font-bold text-[#17231E] leading-snug">
+                      {b.resource_name}
+                    </h3>
 
-                    <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-500">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#4A5B53] pt-1">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-[#103C2D] shrink-0" />
                         <span>
-                          {formatDateTime(booking.start_at)} &rarr; {formatDateTime(booking.end_at)}
+                          {start.toLocaleDateString(undefined, {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
                         </span>
                       </div>
-                      <div>
-                        Location: <span className="font-medium text-slate-700">{res?.location}</span>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-[#D87E3A] shrink-0" />
+                        <span>
+                          {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} –{' '}
+                          {end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (
+                          {formatDuration(b.duration_minutes)})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 sm:col-span-2">
+                        <MapPin className="w-3.5 h-3.5 text-[#798C82] shrink-0" />
+                        <span className="truncate">{b.resource_location}</span>
                       </div>
                     </div>
 
-                    <p className="text-xs text-slate-600 italic bg-slate-50 p-2 rounded border border-slate-100">
-                      Purpose: "{booking.purpose}"
-                    </p>
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E2D2] text-xs text-[#4A5B53]">
+                      <span className="font-bold text-[#17231E] block">Purpose:</span>
+                      <p className="mt-0.5">{b.purpose}</p>
+                    </div>
 
-                    {booking.decision_reason && (
-                      <p className="text-xs text-brand-700 font-medium">
-                        Reason: {booking.decision_reason}
-                      </p>
+                    {isRejected && b.rejection_reason && (
+                      <div className="p-3 rounded-xl bg-[#fdf2f1] border border-[#c2413a]/30 text-xs text-[#c2413a] space-y-1">
+                        <div className="font-bold flex items-center gap-1">
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>Administrator Rejection Reason:</span>
+                        </div>
+                        <p>{b.rejection_reason}</p>
+                      </div>
+                    )}
+
+                    {isApproved && b.admin_notes && (
+                      <div className="p-3 rounded-xl bg-[#f0f7f4] border border-[#126B4F]/25 text-xs text-[#073D2D]">
+                        <span className="font-bold block">Administrator Notes:</span>
+                        <p className="mt-0.5">{b.admin_notes}</p>
+                      </div>
                     )}
                   </div>
 
-                  {/* Actions column */}
-                  <div className="flex flex-row md:flex-col items-end justify-between gap-2 border-t md:border-t-0 pt-3 md:pt-0">
-                    <Link to={`/bookings/${booking.id}`}>
-                      <Button size="sm" variant="outline" className="w-full">
-                        <span>Details &amp; Audit Trail</span>
-                        <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
+                    <Link to={`/resources/${b.resource_id}`}>
+                      <Button size="sm" variant="outline" className="w-full text-xs font-bold">
+                        View Resource
                       </Button>
                     </Link>
 
-                    {booking.status === 'approved' && (
-                      <Link to={`/bookings/${booking.id}/checkin`}>
-                        <Button size="sm" variant="success" className="w-full">
-                          <span>Check In Now</span>
-                        </Button>
-                      </Link>
-                    )}
-
-                    {(booking.status === 'checked_out' || booking.status === 'overdue') && (
-                      <Link to={`/bookings/${booking.id}/return`}>
-                        <Button size="sm" variant="primary" className="w-full">
-                          <span>Return Equipment</span>
-                        </Button>
-                      </Link>
-                    )}
-
-                    {['requested', 'pending_review', 'waitlisted'].includes(booking.status) && (
+                    {(isPending || isApproved) && (
                       <Button
                         size="sm"
-                        variant="ghost"
-                        className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                        onClick={() => handleCancel(booking.id)}
+                        variant="secondary"
+                        onClick={() => handleCancel(b.id)}
+                        className="w-full text-xs font-bold text-[#c2413a] hover:bg-[#fdf2f1] border-[#c2413a]/30"
                       >
                         Cancel Request
                       </Button>
@@ -239,3 +256,4 @@ export function MyBookingsPage() {
   );
 }
 
+export default MyBookingsPage;

@@ -37,9 +37,9 @@ export function OwnerDashboardPage() {
       api.getIncidents(),
     ]);
 
-    setResources(rList);
-    setBookings(bList);
-    setIncidents(iList);
+    setResources(rList || []);
+    setBookings(bList || []);
+    setIncidents(iList || []);
     setLoading(false);
   }
 
@@ -53,16 +53,16 @@ export function OwnerDashboardPage() {
       {/* Top Banner */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#17231E] tracking-tight font-sans">
             Lab Management &amp; Equipment Oversight
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Departmental overview for ECE laboratory benches, booking requests, and safety compliance.
+          <p className="text-xs sm:text-sm text-[#4A5B53] mt-1">
+            Departmental overview for ECE laboratory benches, review queues, and safety compliance.
           </p>
         </div>
 
         <Link to="/owner/resources/new">
-          <Button size="sm">
+          <Button size="sm" variant="primary" className="font-bold">
             <Plus className="w-4 h-4 mr-1" />
             <span>List New Equipment</span>
           </Button>
@@ -72,41 +72,41 @@ export function OwnerDashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Link to="/owner/requests" className="block">
-          <Card hover className="p-4 border-l-4 border-l-amber-500">
+          <Card hover className="p-4 border-l-4 border-l-[#D6AD63]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Review Queue</span>
-              <Clock className="w-4 h-4 text-amber-500" />
+              <span className="text-xs font-bold text-[#4A5B53]">Review Queue</span>
+              <Clock className="w-4 h-4 text-[#D6AD63]" />
             </div>
-            <div className="text-2xl font-bold text-slate-900 mt-2">{pendingCount}</div>
-            <span className="text-[10px] text-amber-700 font-medium">Awaiting decision</span>
+            <div className="text-2xl font-extrabold text-[#17231E] mt-2 font-sans">{pendingCount}</div>
+            <span className="text-[10px] text-[#9e7330] font-bold">Awaiting decision</span>
           </Card>
         </Link>
 
-        <Card className="p-4 border-l-4 border-l-blue-500">
+        <Card className="p-4 border-l-4 border-l-[#126B4F]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Active Checked-Out</span>
-            <CheckCircle2 className="w-4 h-4 text-blue-500" />
+            <span className="text-xs font-bold text-[#4A5B53]">Active Checked-Out</span>
+            <CheckCircle2 className="w-4 h-4 text-[#126B4F]" />
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">{activeCount}</div>
-          <span className="text-[10px] text-blue-700 font-medium">Currently in lab use</span>
+          <div className="text-2xl font-extrabold text-[#17231E] mt-2 font-sans">{activeCount}</div>
+          <span className="text-[10px] text-[#126B4F] font-bold">Currently in lab use</span>
         </Card>
 
-        <Card className="p-4 border-l-4 border-l-rose-500">
+        <Card className="p-4 border-l-4 border-l-[#c2413a]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Overdue Returns</span>
-            <AlertTriangle className="w-4 h-4 text-rose-500" />
+            <span className="text-xs font-bold text-[#4A5B53]">Overdue Returns</span>
+            <AlertTriangle className="w-4 h-4 text-[#c2413a]" />
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">{overdueCount}</div>
-          <span className="text-[10px] text-rose-700 font-medium">Past scheduled return</span>
+          <div className="text-2xl font-extrabold text-[#17231E] mt-2 font-sans">{overdueCount}</div>
+          <span className="text-[10px] text-[#c2413a] font-bold">Past scheduled return</span>
         </Card>
 
-        <Card className="p-4 border-l-4 border-l-purple-500">
+        <Card className="p-4 border-l-4 border-l-[#6b3582]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Open Incidents</span>
-            <AlertTriangle className="w-4 h-4 text-purple-500" />
+            <span className="text-xs font-bold text-[#4A5B53]">Open Incidents</span>
+            <AlertTriangle className="w-4 h-4 text-[#6b3582]" />
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">{openIncidents}</div>
-          <span className="text-[10px] text-purple-700 font-medium">Requires resolution</span>
+          <div className="text-2xl font-extrabold text-[#17231E] mt-2 font-sans">{openIncidents}</div>
+          <span className="text-[10px] text-[#6b3582] font-bold">Requires resolution</span>
         </Card>
       </div>
 
@@ -115,19 +115,21 @@ export function OwnerDashboardPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Layers className="w-5 h-5 text-brand-600" />
-              <h3 className="text-base font-bold text-slate-900">Departmental Equipment Catalog</h3>
+              <Layers className="w-5 h-5 text-[#126B4F]" />
+              <h3 className="text-base font-bold text-[#17231E]">Departmental Equipment Catalog</h3>
             </div>
-            <span className="text-xs text-slate-500">{resources.length} Instruments Active</span>
+            <span className="text-xs font-bold text-[#126B4F] bg-[#f0f7f4] px-2.5 py-1 rounded-full border border-[#126B4F]/20">
+              {resources.length} Instruments Active
+            </span>
           </div>
         </CardHeader>
 
         <CardBody className="p-0">
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[#F0ECE0]">
             {resources.map((res) => (
-              <div key={res.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
-                <div className="flex items-start space-x-3">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0">
+              <div key={res.id} className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#F7F1E5]/50 transition-colors">
+                <div className="flex items-start space-x-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-[#F7F1E5] overflow-hidden shrink-0 border border-[#E8E2D2]">
                     <img
                       src={res.photos?.[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80'}
                       alt={res.name}
@@ -137,20 +139,20 @@ export function OwnerDashboardPage() {
 
                   <div>
                     <div className="flex items-center space-x-2">
-                      <h4 className="font-bold text-sm text-slate-900">{res.name}</h4>
+                      <h4 className="font-bold text-sm text-[#17231E]">{res.name}</h4>
                       <Badge variant="default" size="sm">
                         {res.category}
                       </Badge>
                     </div>
 
-                    <p className="text-xs text-slate-500 mt-0.5">{res.location}</p>
+                    <p className="text-xs text-[#4A5B53] mt-0.5">{res.location}</p>
 
-                    <div className="flex items-center space-x-3 text-[11px] text-slate-400 mt-1">
+                    <div className="flex items-center space-x-3 text-[11px] text-[#798C82] mt-1">
                       <span>Max {formatDuration(res.max_booking_minutes)}</span>
                       <span>·</span>
                       <span>{res.requires_approval ? 'Approval Required' : 'Auto-Approve'}</span>
                       <span>·</span>
-                      <span>QR: {res.qr_token}</span>
+                      <span className="font-mono">QR: {res.qr_token}</span>
                     </div>
                   </div>
                 </div>
@@ -177,3 +179,4 @@ export function OwnerDashboardPage() {
   );
 }
 
+export default OwnerDashboardPage;
